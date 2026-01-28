@@ -1,122 +1,374 @@
+import 'dart:convert';
+
+import 'package:beni_newlook/pages/login.dart';
+import 'package:bitsdojo_window/bitsdojo_window.dart';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'package:intl/intl.dart';
+import 'dart:async';
+
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(const MyApp(titre: "G-Newlook"));
+  doWhenWindowReady(() {
+    const initialSize = Size(600, 600);
+    appWindow.minSize = const Size(400, 300); // taille minimale de la fenêtre
+    appWindow.size = initialSize; // taille initiale de la fenêtre
+    appWindow.alignment = Alignment.center; // centre la fenêtre
+    appWindow.title = "G-HOTEL"; // titre de la fenêtre
+
+    appWindow.show();
+  });
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  final String titre;
 
-  // This widget is the root of your application.
+  const MyApp({super.key, required this.titre});
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // TRY THIS: Try running your application with "flutter run". You'll see
-        // the application has a purple toolbar. Then, without quitting the app,
-        // try changing the seedColor in the colorScheme below to Colors.green
-        // and then invoke "hot reload" (save your changes or press the "hot
-        // reload" button in a Flutter-supported IDE, or press "r" if you used
-        // the command line to start the app).
-        //
-        // Notice that the counter didn't reset back to zero; the application
-        // state is not lost during the reload. To reset the state, use hot
-        // restart instead.
-        //
-        // This works for code too, not just values: Most code changes can be
-        // tested with just a hot reload.
-        colorScheme: .fromSeed(seedColor: Colors.deepPurple),
-      ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+      title: titre,
       debugShowCheckedModeBanner: false,
+      theme: ThemeData(
+        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF0D47A1)),
+        useMaterial3: true,
+      ),
+      home: const Login(),
     );
   }
 }
 
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
-
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
-
-  final String title;
+class MainMenu extends StatefulWidget {
+  const MainMenu({super.key});
 
   @override
-  State<MyHomePage> createState() => _MyHomePageState();
+  State<MainMenu> createState() => _MainMenuState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
+class _MainMenuState extends State<MainMenu> {
+  int _selectedIndex = 0;
+  String username = 'Utilisateur';
+  String entrepriseName= 'Chargement...';
+  int idEntreprise = 0;
+  late String currentDate;
+  late Timer _timer;
 
-  void _incrementCounter() {
-    setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
+
+  @override
+  void initState() {
+    super.initState();
+    
+    // 👇 Maximiser la fenêtre principale
+  Future.delayed(Duration.zero, () {
+    appWindow.maximize();
+  });
+
+
+
+    // initialise la date
+    currentDate = _getCurrentDate();
+    // met à jour chaque seconde
+    _timer = Timer.periodic(const Duration(seconds: 1), (Timer t) {  
+      setState(() {
+        currentDate = _getCurrentDate();
+      });
     });
+    loadUserName();
+    
   }
 
   @override
-  Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
-    return Scaffold(
-      appBar: AppBar(
-        // TRY THIS: Try changing the color here to a specific color (to
-        // Colors.amber, perhaps?) and trigger a hot reload to see the AppBar
-        // change color while the other colors stay the same.
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: Text(widget.title),
+  void dispose() {
+    _timer.cancel(); // arrête le timer quand on quitte la page
+    super.dispose();
+  }
+
+  String _getCurrentDate() {
+    final now = DateTime.now();
+    return DateFormat('dd/MM/yyyy HH:mm:ss').format(now);
+  }
+
+  // Pages affichées selon l'index
+  Widget _widgetOptions(int index) {
+    switch (index) {
+      case 0:
+        return const _Page(title: 'Accueil');
+      case 1:
+        return const _Page(title: 'Gestion du stock');
+      case 2:
+        return const _Page(title: 'Logements');
+      case 3:
+        return const _Page(title: 'Caisse');
+      case 4:
+        return const _Page(title: 'Facturation');
+      case 5:
+        return const _Page(title: 'Commandes');
+      case 6:
+        return const _Page(title: 'Ressources humaines');
+      case 7:
+        return const _Page(title: 'Équipements');
+      case 8:
+        return const _Page(title: 'Fournisseurs');
+      case 9:
+        return const _Page(title: 'Rapports');
+      case 10:
+        return const _Page(title: 'Paramètres');
+      default:
+        return const _Page(title: 'Accueil');
+    }
+  }
+
+
+  // charger le token depuis le shared preferences
+
+  void loadUserName() async {
+  final prefs = await SharedPreferences.getInstance();
+  final token = prefs.getString('token') ?? '';
+
+
+  final response = await http.get(
+    Uri.parse('https://riphin-salemanager.com/beni_newlook_API/NLvalidate_Token.php'),
+    headers: {
+      'Authorization': token, // 👈 envoie le token brut
+      'Content-Type': 'application/json',
+    },
+  ).timeout(const Duration(seconds: 5));
+
+
+  final data = json.decode(response.body);
+
+  if (response.statusCode == 200 && data['success'] == true) {
+    if (data['user']['Nom_utilisateur'] != null) {
+      setState(() {
+        username = data['user']['Nom_utilisateur'] ?? 'Utilisateur'; // valeur par défaut si null
+        idEntreprise = data['user']['entreprise']; // recuperation de l'id de l'entreprise
+      });
+     
+      selectEntrepriseName(idEntreprise); // appel de la fonction pour selectionner le nom de l'entreprise
+    } else {
+      // ignore: use_build_context_synchronously
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Erreur lors du chargement des informations utilisateur')),
+      );
+      
+    }
+  } else {
+    // ignore: use_build_context_synchronously
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Erreur serveur: ${response.statusCode}')),
+    );
+  }
+}
+
+
+
+// fonction pour selectionner le nom de l'entreprise
+Future<void> selectEntrepriseName(
+  int entrepriseId
+) async {
+
+  var url = Uri.parse('https://riphin-salemanager.com/beni_newlook_API/Getname_Ese.php');
+  var response = await http.post(url, 
+  headers: {'Content-Type': 'application/json'},
+  body: json.encode({
+    'ID_entreprise': entrepriseId,
+  })
+  ).timeout(const Duration(seconds: 10));
+
+  if (!mounted) return;
+
+  if (response.statusCode == 200) {
+      var data = json.decode(response.body);
+      
+    if (data['success']) {
+      setState(() {
+        entrepriseName = data['entreprise']?? 'Entreprise';
+      });
+      
+    } else {
+      // Échec de la récupération
+      // ignore: use_build_context_synchronously
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(data['message'] ?? 'Échec de la récupération du nom de l\'entreprise')),
+      );
+    }
+  } else {
+    // Erreur serveur
+    // ignore: use_build_context_synchronously
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Erreur serveur: ${response.statusCode}')),
+    );
+  }
+}
+
+
+
+  @override
+Widget build(BuildContext context) {
+  final bgColor = Theme.of(context).colorScheme.primary;
+
+  return Scaffold(
+    appBar: AppBar(
+      backgroundColor: bgColor,
+      title:  Text(
+        entrepriseName,
+        style: TextStyle(color: Color.fromARGB(255, 236, 210, 210)),
       ),
-      body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
-        child: Column(
-          // Column is also a layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
-          //
-          // TRY THIS: Invoke "debug painting" (choose the "Toggle Debug Paint"
-          // action in the IDE, or press "p" in the console), to see the
-          // wireframe for each widget.
-          mainAxisAlignment: .center,
+      actions: [
+        Padding(
+          padding: const EdgeInsets.only(right: 16),
+          child: Center(
+            child: Text(
+              currentDate,
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
+          ),
+        ),
+      ],
+    ),
+    body: SafeArea(
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          return Row(
+            children: [
+              // 👉 Barre latérale
+              Container(
+                width: 260,
+                color: bgColor,
+                child: Column(
+                  children: [
+                    const SizedBox(height: 20),
+                    Expanded(
+                      child: ListView(
+                        padding: EdgeInsets.zero,
+                        children: [
+                          _buildMenuItem(Icons.home, "Accueil", 0),
+                          _buildMenuItem(Icons.inventory_2, "Stock Stock", 1),
+                          _buildMenuItem(Icons.house, "Logements", 2),
+                          _buildMenuItem(Icons.point_of_sale, "Caisse", 3),
+                          _buildMenuItem(Icons.receipt_long, "Facturation", 4),
+                          _buildMenuItem(Icons.shopping_cart, "Commandes", 5),
+                          _buildMenuItem(Icons.people, "RH", 6),
+                          _buildMenuItem(Icons.build, "Équipements", 7),
+                          _buildMenuItem(Icons.local_shipping, "Fournisseurs", 8),
+                          _buildMenuItem(Icons.bar_chart, "Rapports", 9),
+                          _buildMenuItem(Icons.settings, "Paramètres", 10),
+                        ],
+                      ),
+                    ),
+                    const Divider(color: Colors.white24),
+                    Padding(
+                      padding: const EdgeInsets.all(12),
+                      child: Row(
+                        children: [
+                          const CircleAvatar(
+                            radius: 16,
+                            backgroundColor: Colors.white,
+                            child: Icon(Icons.person, color: Color(0xFF0D47A1)),
+                          ),
+                          const SizedBox(width: 10),
+                          Flexible(
+                            child: Text(
+                              username,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w600,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              const VerticalDivider(width: 1, thickness: 1),
+
+              // 👉 Panneau principal
+              Expanded(
+                child: Container(
+                  padding: const EdgeInsets.all(16),
+                  child: _widgetOptions(_selectedIndex),
+                ),
+              ),
+            ],
+          );
+        },
+      ),
+    ),
+  );
+}
+
+  // Fonction pour construire chaque ligne du menu
+  Widget _buildMenuItem(IconData icon, String label, int index) {
+    final selected = _selectedIndex == index;
+    return InkWell(
+      onTap: () => setState(() => _selectedIndex = index),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          // ignore: deprecated_member_use
+          color: selected ? Colors.white.withOpacity(0.1) : Colors.transparent,
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Row(
           children: [
-            const Text('You have pushed the button this many times:'),
+            Icon(icon, color: Colors.white),
+            const SizedBox(width: 12),
             Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headlineMedium,
+              label,
+              style: const TextStyle(color: Colors.white, fontSize: 14),
             ),
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
+    );
+  }
+
+
+
+}
+
+
+
+// Page de contenu basique
+class _Page extends StatelessWidget {
+  final String title;
+  const _Page({required this.title});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(title,
+              style: Theme.of(context).textTheme.titleLarge,
+              textAlign: TextAlign.center),
+          const SizedBox(height: 16),
+          Expanded(
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                border: Border.all(color: Theme.of(context).dividerColor),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Center(
+                child: Text('Contenu…'),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
