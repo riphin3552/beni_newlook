@@ -125,8 +125,10 @@ void resetformulaire() {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Informations de l'entreprise")),
-      body: Padding(
+      appBar: AppBar(
+        title: const Text("Informations de l'entreprise")
+        ),
+      body: Padding( 
         padding: const EdgeInsets.all(16.0),
         child: Form(
           key: _formKey,

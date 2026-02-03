@@ -16,7 +16,8 @@ class Login extends StatefulWidget{
 class _LoginState extends State<Login> {
 
   final _formKey = GlobalKey<FormState>();
-
+  bool _obscurpassWord=true;
+  
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
@@ -42,13 +43,14 @@ class _LoginState extends State<Login> {
       var data = json.decode(response.body);
       if (data['success']) {
         // Connexion réussie
+           final int identreprise=data['user']['entreprise'];     
 
         final prefs = await SharedPreferences.getInstance(); // sauvegarder le token
         await prefs.setString('token', data['user']['token']);
         Navigator.pushReplacement(
           // ignore: use_build_context_synchronously
           context, 
-          MaterialPageRoute(builder: (context) => const MainMenu()),
+          MaterialPageRoute(builder: (context) =>  MainMenu(identreprise:identreprise)),
         );
       } else {
         // Échec de la connexion
@@ -117,18 +119,29 @@ class _LoginState extends State<Login> {
                           SizedBox(height: 16.0),
                           TextFormField(
                             controller: _passwordController,
+                            obscureText: _obscurpassWord,
                             decoration: InputDecoration(
                               labelText: 'Mot de passe',
                               border: OutlineInputBorder(),
-                              prefixIcon: Icon(Icons.lock)
+                              prefixIcon: Icon(Icons.lock),
+                              suffixIcon: IconButton(
+                                icon: Icon(
+                                  _obscurpassWord? Icons.visibility:Icons.visibility_off,
+                                ),
+                                onPressed: () {
+                                  setState(() {
+                                    _obscurpassWord=!_obscurpassWord;
+                                  });
+                                },
+                              )
                             ),
-                            obscureText: true,
-                            validator: (value) {
+                             validator: (value) {
                               if (value == null || value.isEmpty) {
                                 return 'Veuillez entrer votre mot de passe';
                               }
                               return null;
                             },
+                            
                           ),
                           SizedBox(height: 16.0),
                           ElevatedButton(
@@ -147,7 +160,7 @@ class _LoginState extends State<Login> {
                               // Utilise double.infinity pour que le bouton prenne la largeur maximale disponible
                                 minimumSize: Size(double.infinity, 50),
                               ),
-                            child: Text('Se connecter', style: TextStyle(fontSize: 18.0,color: Colors.white),
+                            child: Text('Connexion', style: TextStyle(fontSize: 18.0,color: Colors.white),
                           ),
                       )],
                       ),),
