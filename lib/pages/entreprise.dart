@@ -83,23 +83,83 @@ class _EntrepriseState extends State<Entreprise> {
     if (response.statusCode == 200) {
       var data = jsonDecode(responseBody);
       if (data['success'] == true) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Entreprise enregistrée avec succès')),
+        showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              icon: Icon(Icons.check_circle, color: Colors.green, size: 48),
+              title: Text('Succès'),
+              content: Text('Entreprise enregistrée avec succès'),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                  child: Text('OK', style: TextStyle(color: Color.fromARGB(255, 121, 169, 240))),
+                ),
+              ],
+            );
+          },
         );
-        resetformulaire(); // Réinitialiser le formulaire après succès
+        resetformulaire();
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erreur: ${data['message'] ?? 'Réponse inattendue'}')),
+        showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              icon: Icon(Icons.error_outline, color: Colors.red, size: 48),
+              title: Text('Erreur'),
+              content: Text('Erreur: ${data['message'] ?? 'Réponse inattendue'}'),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                  child: Text('OK', style: TextStyle(color: Color.fromARGB(255, 121, 169, 240))),
+                ),
+              ],
+            );
+          },
         );
       }
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Erreur serveur: ${response.statusCode}')),
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            icon: Icon(Icons.warning_amber, color: Colors.orange, size: 48),
+            title: Text('Erreur'),
+            content: Text('Erreur serveur: ${response.statusCode}'),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+                child: Text('OK', style: TextStyle(color: Color.fromARGB(255, 121, 169, 240))),
+              ),
+            ],
+          );
+        },
       );
     }
   } catch (e) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Erreur réseau: $e')),
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          icon: Icon(Icons.error_outline, color: Colors.red, size: 48),
+          title: Text('Erreur Réseau'),
+          content: Text('Erreur réseau: $e'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: Text('OK', style: TextStyle(color: Color.fromARGB(255, 121, 169, 240))),
+            ),
+          ],
+        );
+      },
     );
   }
 }
@@ -126,105 +186,205 @@ void resetformulaire() {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Informations de l'entreprise")
-        ),
-      body: Padding( 
+        title: const Text("Informations de l'Entreprise"),
+        backgroundColor: Color.fromARGB(255, 121, 169, 240),
+        elevation: 2,
+        centerTitle: true,
+      ),
+      backgroundColor: Color.fromARGB(255, 245, 248, 255),
+      body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Form(
           key: _formKey,
           child: Card(
-            color: const Color.fromARGB(255, 211, 225, 247),
+            elevation: 4,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
             child: ListView(
-              padding: const EdgeInsets.all(16.0),
+              padding: const EdgeInsets.all(20.0),
               children: [
                 TextFormField(
                   controller: _denomationController,
-                  decoration: const InputDecoration(
+                  decoration: InputDecoration(
                     labelText: 'Dénomination',
-                    prefixIcon: Icon(Icons.business),
+                    labelStyle: TextStyle(color: Color.fromARGB(255, 121, 169, 240)),
+                    prefixIcon: Icon(Icons.business, color: Color.fromARGB(255, 121, 169, 240)),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide(color: Color.fromARGB(255, 121, 169, 240)),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide(color: Color.fromARGB(255, 121, 169, 240), width: 2),
+                    ),
                   ),
                   validator: (value) =>
                       value == null || value.isEmpty ? 'Champ obligatoire' : null,
                 ),
+                SizedBox(height: 16),
                 TextFormField(
                   controller: _numeroRCCMController,
-                  decoration: const InputDecoration(
+                  decoration: InputDecoration(
                     labelText: 'Numéro RCCM',
-                    prefixIcon: Icon(Icons.confirmation_number),
+                    labelStyle: TextStyle(color: Color.fromARGB(255, 121, 169, 240)),
+                    prefixIcon: Icon(Icons.confirmation_number, color: Color.fromARGB(255, 121, 169, 240)),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide(color: Color.fromARGB(255, 121, 169, 240)),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide(color: Color.fromARGB(255, 121, 169, 240), width: 2),
+                    ),
                   ),
                   validator: (value) =>
                       value == null || value.isEmpty ? 'Champ obligatoire' : null,
                 ),
+                SizedBox(height: 16),
                 TextFormField(
                   controller: _idNationalController,
-                  decoration: const InputDecoration(
+                  decoration: InputDecoration(
                     labelText: 'ID National',
-                    prefixIcon: Icon(Icons.badge),
+                    labelStyle: TextStyle(color: Color.fromARGB(255, 121, 169, 240)),
+                    prefixIcon: Icon(Icons.badge, color: Color.fromARGB(255, 121, 169, 240)),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide(color: Color.fromARGB(255, 121, 169, 240)),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide(color: Color.fromARGB(255, 121, 169, 240), width: 2),
+                    ),
                   ),
                   validator: (value) => value == null || value.isEmpty
                       ? 'Champ obligatoire'
                       : null,
                 ),
+                SizedBox(height: 16),
                 TextFormField(
                   controller: _numImpotController,
-                  decoration: const InputDecoration(
+                  decoration: InputDecoration(
                     labelText: 'Numéro Impôt',
-                    prefixIcon: Icon(Icons.confirmation_number),
+                    labelStyle: TextStyle(color: Color.fromARGB(255, 121, 169, 240)),
+                    prefixIcon: Icon(Icons.confirmation_number, color: Color.fromARGB(255, 121, 169, 240)),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide(color: Color.fromARGB(255, 121, 169, 240)),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide(color: Color.fromARGB(255, 121, 169, 240), width: 2),
+                    ),
                   ),
                   validator: (value) => value == null || value.isEmpty
                       ? 'Champ obligatoire'
                       : null,
                 ),
+                SizedBox(height: 16),
                 TextFormField(
                   controller: _adresseController,
-                  decoration: const InputDecoration(
+                  decoration: InputDecoration(
                     labelText: 'Adresse',
-                    prefixIcon: Icon(Icons.location_on),
+                    labelStyle: TextStyle(color: Color.fromARGB(255, 121, 169, 240)),
+                    prefixIcon: Icon(Icons.location_on, color: Color.fromARGB(255, 121, 169, 240)),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide(color: Color.fromARGB(255, 121, 169, 240)),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide(color: Color.fromARGB(255, 121, 169, 240), width: 2),
+                    ),
                   ),
                   validator: (value) =>
                       value == null || value.isEmpty ? 'Champ obligatoire' : null,
                 ),
+                SizedBox(height: 16),
                 TextFormField(
                   controller: _telephoneController,
-                  decoration: const InputDecoration(
+                  keyboardType: TextInputType.phone,
+                  decoration: InputDecoration(
                     labelText: 'Téléphone',
-                    prefixIcon: Icon(Icons.phone),
+                    labelStyle: TextStyle(color: Color.fromARGB(255, 121, 169, 240)),
+                    prefixIcon: Icon(Icons.phone, color: Color.fromARGB(255, 121, 169, 240)),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide(color: Color.fromARGB(255, 121, 169, 240)),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide(color: Color.fromARGB(255, 121, 169, 240), width: 2),
+                    ),
                   ),
                   validator: (value) =>
                       value == null || value.isEmpty ? 'Champ obligatoire' : null,
                 ),
+                SizedBox(height: 16),
                 TextFormField(
                   controller: _emailController,
-                  decoration: const InputDecoration(
+                  keyboardType: TextInputType.emailAddress,
+                  decoration: InputDecoration(
                     labelText: 'Email',
-                    prefixIcon: Icon(Icons.email),
+                    labelStyle: TextStyle(color: Color.fromARGB(255, 121, 169, 240)),
+                    prefixIcon: Icon(Icons.email, color: Color.fromARGB(255, 121, 169, 240)),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide(color: Color.fromARGB(255, 121, 169, 240)),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide(color: Color.fromARGB(255, 121, 169, 240), width: 2),
+                    ),
                   ),
                   validator: (value) =>
                       value == null || value.isEmpty ? 'Champ obligatoire' : null,
                 ),
-
-                const SizedBox(height: 20),
+                const SizedBox(height: 24),
                 Row(
                   children: [
                     Container(
                       height: 150,
                       width: 150,
                       decoration: BoxDecoration(
-                        border: Border.all(color: Colors.grey),
+                        border: Border.all(color: Color.fromARGB(255, 121, 169, 240), width: 2),
                         borderRadius: BorderRadius.circular(8),
+                        color: Color.fromARGB(255, 245, 248, 255),
                       ),
                       child: _logoBytes != null
                           ? Image.memory(_logoBytes!, fit: BoxFit.cover)
-                          : const Center(child: Text('Aucun logo sélectionné')),
+                          : Center(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.image_outlined,
+                                    size: 40,
+                                    color: Colors.grey[400],
+                                  ),
+                                  SizedBox(height: 8),
+                                  Text(
+                                    'Aucun logo',
+                                    style: TextStyle(color: Colors.grey[500]),
+                                  ),
+                                ],
+                              ),
+                            ),
                     ),
                     const SizedBox(width: 20),
-                    ElevatedButton.icon(
-                      onPressed: _pickLogo,
-                      icon: const Icon(Icons.upload_file),
-                      label: const Text('Choisir un logo'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor:
-                            const Color.fromARGB(255, 121, 169, 240),
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        onPressed: _pickLogo,
+                        icon: const Icon(Icons.upload_file),
+                        label: const Text('Choisir un Logo'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Color.fromARGB(255, 121, 169, 240),
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          padding: EdgeInsets.symmetric(vertical: 12),
+                        ),
                       ),
                     ),
                   ],
@@ -234,8 +394,8 @@ void resetformulaire() {
                   Text('Fichier sélectionné : $_logoName'),
                 ],
 
-                const SizedBox(height: 40),
-                ElevatedButton(
+                const SizedBox(height: 32),
+                ElevatedButton.icon(
                   onPressed: () {
                     if (_formKey.currentState!.validate()) {
                       saveEntreprise(
@@ -251,12 +411,20 @@ void resetformulaire() {
                       );
                     }
                   },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor:
-                        const Color.fromARGB(255, 121, 169, 240),
+                  icon: Icon(Icons.save),
+                  label: Text(
+                    'Enregistrer',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                   ),
-                  child: const Text('Enregistrer',
-                      style: TextStyle(color: Colors.white)),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Color.fromARGB(255, 121, 169, 240),
+                    foregroundColor: Colors.white,
+                    minimumSize: Size(double.infinity, 54),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    elevation: 3,
+                  ),
                 ),
               ],
             ),

@@ -41,15 +41,68 @@ class _UtilisateursState extends State<Utilisateurs> {
         var data=json.decode(response.body);
         if(data['success']){
           // ignore: use_build_context_synchronously
-          ScaffoldMessenger.of(context,).showSnackBar(SnackBar(content: Text("Utilisateur ajouté qvec succès",textAlign: TextAlign.center,)));
+          showDialog(
+            // ignore: use_build_context_synchronously
+            context: context,
+            builder: (BuildContext context) {
+              return AlertDialog(
+                icon: Icon(Icons.check_circle, color: Colors.green, size: 48),
+                title: Text('Succès'),
+                content: Text("Utilisateur ajouté avec succès"),
+                actions: [
+                  TextButton(
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                    },
+                    child: Text('OK', style: TextStyle(color: Color.fromARGB(255, 121, 169, 240))),
+                  ),
+                ],
+              );
+            },
+          );
         }else{
           // ignore: use_build_context_synchronously
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("erreur d'enregistrement: ${data['error']}")));
+          showDialog(
+            // ignore: use_build_context_synchronously
+            context: context,
+            builder: (BuildContext context) {
+              return AlertDialog(
+                icon: Icon(Icons.error_outline, color: Colors.red, size: 48),
+                title: Text('Erreur'),
+                content: Text("Erreur d'enregistrement: ${data['error']}"),
+                actions: [
+                  TextButton(
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                    },
+                    child: Text('OK', style: TextStyle(color: Color.fromARGB(255, 121, 169, 240))),
+                  ),
+                ],
+              );
+            },
+          );
         }
       }
     } catch(e){
       if (!mounted) return;
-      ScaffoldMessenger.of(context,).showSnackBar(SnackBar(content: Text("erruer de connexion: $e")));
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            icon: Icon(Icons.error_outline, color: Colors.red, size: 48),
+            title: Text('Erreur de Connexion'),
+            content: Text("Erreur de connexion: $e"),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+                child: Text('OK', style: TextStyle(color: Color.fromARGB(255, 121, 169, 240))),
+              ),
+            ],
+          );
+        },
+      );
     }
 
   }
@@ -59,37 +112,62 @@ class _UtilisateursState extends State<Utilisateurs> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      
       appBar: AppBar(
-        title: Text("Utilisateurs")
+        title: Text("Ajouter un Utilisateur"),
+        backgroundColor: Color.fromARGB(255, 121, 169, 240),
+        elevation: 2,
+        centerTitle: true,
       ),
-
-      body: 
-                 
-            Container(
-              color: const Color.fromARGB(255, 211, 225, 247),
-              child: Center(
-                child: Form(
-                  key: _formKey,
-                  child: Padding(
-                    padding: EdgeInsets.all(30),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Card(
-                          color: Colors.white,
-                          child: Padding(padding: EdgeInsets.all(20),
-                          child: Column(
-                            children: [
-                              Text("Nouvel utilisateur"),
-                              SizedBox(height: 20,),
+      backgroundColor: Color.fromARGB(255, 245, 248, 255),
+      body: SingleChildScrollView(
+        child: Container(
+          padding: EdgeInsets.all(16),
+          child: Center(
+            child: Form(
+              key: _formKey,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  SizedBox(height: 20),
+                  Card(
+                    elevation: 4,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Padding(
+                      padding: EdgeInsets.all(24),
+                      child: Column(
+                        children: [
+                          Icon(
+                            Icons.person_add,
+                            size: 48,
+                            color: Color.fromARGB(255, 121, 169, 240),
+                          ),
+                          SizedBox(height: 16),
+                          Text(
+                            "Nouvel Utilisateur",
+                            style: TextStyle(
+                              fontSize: 22,
+                              fontWeight: FontWeight.bold,
+                              color: Color.fromARGB(255, 121, 169, 240),
+                            ),
+                          ),
+                          SizedBox(height: 24),
                               TextFormField(
                                 controller: _nomUtilisateurController,
                                 decoration: InputDecoration(
                                   labelText: 'Nom utilisateur',
+                                  labelStyle: TextStyle(color: Color.fromARGB(255, 121, 169, 240)),
                                   hintText: 'Nom utilisateur',
-                                  border: OutlineInputBorder(),
-                                  prefixIcon: Icon(Icons.person)
+                                  prefixIcon: Icon(Icons.person, color: Color.fromARGB(255, 121, 169, 240)),
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                    borderSide: BorderSide(color: Color.fromARGB(255, 121, 169, 240)),
+                                  ),
+                                  focusedBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                    borderSide: BorderSide(color: Color.fromARGB(255, 121, 169, 240), width: 2),
+                                  ),
                                 ),
                                 validator: (value) {
                                   if(value==null || value.isEmpty){
@@ -103,11 +181,20 @@ class _UtilisateursState extends State<Utilisateurs> {
 
                               TextFormField(
                                 controller: _telephoneController,
+                                keyboardType: TextInputType.phone,
                                 decoration: InputDecoration(
-                                  labelText: 'Télephone',
-                                  hintText: 'Nomero de télephone',
-                                  border: OutlineInputBorder(),
-                                  prefixIcon: Icon(Icons.person)
+                                  labelText: 'Téléphone',
+                                  labelStyle: TextStyle(color: Color.fromARGB(255, 121, 169, 240)),
+                                  hintText: 'Numéro de téléphone',
+                                  prefixIcon: Icon(Icons.phone, color: Color.fromARGB(255, 121, 169, 240)),
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                    borderSide: BorderSide(color: Color.fromARGB(255, 121, 169, 240)),
+                                  ),
+                                  focusedBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                    borderSide: BorderSide(color: Color.fromARGB(255, 121, 169, 240), width: 2),
+                                  ),
                                 ),
                                 validator: (value) {
                                   if(value==null || value.isEmpty){
@@ -122,10 +209,18 @@ class _UtilisateursState extends State<Utilisateurs> {
                                 controller: _motdepassController,
                                 obscureText: _obscurepassWord,
                                 decoration: InputDecoration(
-                                  labelText: 'Mot de pass',
-                                  hintText: 'Mot de pass',
-                                  border: OutlineInputBorder(),
-                                  prefixIcon: Icon(Icons.lock),
+                                  labelText: 'Mot de passe',
+                                  labelStyle: TextStyle(color: Color.fromARGB(255, 121, 169, 240)),
+                                  hintText: 'Mot de passe',
+                                  prefixIcon: Icon(Icons.lock, color: Color.fromARGB(255, 121, 169, 240)),
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                    borderSide: BorderSide(color: Color.fromARGB(255, 121, 169, 240)),
+                                  ),
+                                  focusedBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                    borderSide: BorderSide(color: Color.fromARGB(255, 121, 169, 240), width: 2),
+                                  ),
                                   suffixIcon: IconButton( 
                                     icon: Icon(
                                           _obscurepassWord? Icons.visibility:Icons.visibility_off,
@@ -143,36 +238,37 @@ class _UtilisateursState extends State<Utilisateurs> {
                                   return null;
                                 },
                               ),
-                              SizedBox(height: 16,),
-                    
-                              ElevatedButton(
-                              onPressed: () {
-                                if (_formKey.currentState!.validate()) {
-                                  // Traiter la connexion
-                                  addUtilisateur();
-                                }
-                              },
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Color.fromARGB(255, 121, 169, 240),
-                                // Utilise double.infinity pour que le bouton prenne la largeur maximale disponible
-                                  minimumSize: Size(double.infinity, 50),
+                              SizedBox(height: 20),
+                              ElevatedButton.icon(
+                                onPressed: () {
+                                  if (_formKey.currentState!.validate()) {
+                                    addUtilisateur();
+                                  }
+                                },
+                                icon: Icon(Icons.check),
+                                label: Text(
+                                  'Ajouter l\'Utilisateur',
+                                  style: TextStyle(fontSize: 14.0, fontWeight: FontWeight.w600),
                                 ),
-                              child: Text('Ajouter', style: TextStyle(fontSize: 12.0,color: Colors.white),
-                            ),
-                        )
-                    
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Color.fromARGB(255, 121, 169, 240),
+                                  foregroundColor: Colors.white,
+                                  minimumSize: Size(double.infinity, 54),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  elevation: 3,
+                                ),
+                              ),
                             ],
-                          )
-                          
                           ),
-                          
-                        )
-                      ],
+                        ),
+                      )],
                     ),
-                  )
+                  ),
                 ),
-              )
-            )
+              ),
+            ),
           );
   }
 }

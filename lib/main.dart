@@ -1,8 +1,14 @@
+// ignore_for_file: use_build_context_synchronously, duplicate_ignore
+
 import 'dart:convert';
 
+
+import 'package:beni_newlook/CategoryProduit.dart';
+import 'package:beni_newlook/IdentificationProduit.dart';
+import 'package:beni_newlook/TypesStock.dart';
+import 'package:beni_newlook/pages/TypeProduit.dart';
 import 'package:beni_newlook/pages/Utilisateurs.dart';
 import 'package:beni_newlook/pages/entreprise.dart';
-
 import 'package:beni_newlook/pages/login.dart';
 import 'package:bitsdojo_window/bitsdojo_window.dart';
 import 'package:flutter/material.dart';
@@ -104,7 +110,7 @@ class _MainMenuState extends State<MainMenu> {
       case 0:
         return const _Page(title: 'Accueil');
       case 1:
-        return const _StockMenu(titreGestionStockMenu: 'Gestion du stock',); // contenu menu gestion stock
+        return StockMenu(titreGestionStockMenu: 'Gestion du stock', identreprise: widget.identreprise); // contenu menu gestion stock
       case 2:
         return const _Page(title: 'Logements');
       case 3:
@@ -122,7 +128,7 @@ class _MainMenuState extends State<MainMenu> {
       case 9:
         return const _Page(title: 'Rapports');
       case 10:
-        return  _ParametresMenu(titreMenuParametres: 'Paramètres',identreprise: widget.identreprise);
+        return  ParametresMenu(titreMenuParametres: 'Paramètres',identreprise: widget.identreprise);
       default:
         return const _Page(title: 'Accueil');
     }
@@ -163,6 +169,7 @@ class _MainMenuState extends State<MainMenu> {
 
       }
     } else {
+      // ignore: duplicate_ignore
       // ignore: use_build_context_synchronously
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Erreur serveur: ${response.statusCode}')),
@@ -181,7 +188,7 @@ class _MainMenuState extends State<MainMenu> {
     var response = await http.post(url,
     headers: {'Content-Type': 'application/json'},
     body: json.encode({
-      'ID_entreprise': entrepriseId,
+      'ID_entreprise': idEntreprise,
     })
     ).timeout(const Duration(seconds: 10));
 
@@ -197,6 +204,7 @@ class _MainMenuState extends State<MainMenu> {
 
       } else {
         // Échec de la récupération
+        // ignore: duplicate_ignore
         // ignore: use_build_context_synchronously
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(data['message'] ?? 'Échec de la récupération du nom de l\'entreprise')),
@@ -204,6 +212,7 @@ class _MainMenuState extends State<MainMenu> {
       }
     } else {
       // Erreur serveur
+      // ignore: duplicate_ignore
       // ignore: use_build_context_synchronously
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Erreur serveur: ${response.statusCode}')),
@@ -345,26 +354,7 @@ class _MainMenuState extends State<MainMenu> {
 
 
 
-//Ouvrir une nouvelle fenetre independant de la fenetre principale
-// void openNewWindow(Widget page, String title) {
-//   runApp(MaterialApp(home: page));
 
-//   doWhenWindowReady(() {
-//     appWindow.size = const Size(800, 600);
-//     appWindow.alignment = Alignment.center;
-//     appWindow.title = title;
-//     appWindow.show();
-//   });
-// }
-
-// ouvrir une nouvelle fenetre
-// void openNewWindow(String title) async {
-//   final window = await DesktopMultiWindow.createWindow(jsonEncode({
-//     'title': title,
-//   }));
-//   window.setFrame(const Rect.fromLTWH(100, 100, 800, 600));
-//   window.show();
-// }
 
 
 
@@ -408,239 +398,352 @@ class _Page extends StatelessWidget {
 
 
 // contenu menu gestion stock
-class _StockMenu extends StatelessWidget {
+class StockMenu extends StatefulWidget {
   final String titreGestionStockMenu;
-  const _StockMenu({required this.titreGestionStockMenu});
+  final int identreprise;
+
+  const StockMenu({
+    super.key,
+    required this.titreGestionStockMenu,
+    required this.identreprise,
+  });
+
+  @override
+  State<StockMenu> createState() => _StockMenuState();
+}
+
+class _StockMenuState extends State<StockMenu> {
+  int _hoveredIndex = -1;
 
   @override
   Widget build(BuildContext context) {
+    final primaryColor = const Color(0xFF0D47A1);
+    
     return Padding(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(titreGestionStockMenu,
-              style: Theme.of(context).textTheme.titleLarge,
-              textAlign: TextAlign.center),
-          const SizedBox(height: 16),
-          Expanded(
-            child: Container(
-              decoration: BoxDecoration(
-                color: Colors.white,
-                border: Border.all(color: Theme.of(context).dividerColor),
-                borderRadius: BorderRadius.circular(12),
+          // Enhanced Header
+          Container(
+            padding: const EdgeInsets.only(bottom: 20),
+            decoration: BoxDecoration(
+              border: Border(
+                bottom: BorderSide(
+                  // ignore: deprecated_member_use
+                  color: primaryColor.withOpacity(0.2),
+                  width: 2,
+                ),
               ),
-              child: SingleChildScrollView(
-                child: Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                
-                    children: [
-                      Wrap(
-                        spacing: 30,
-                        alignment: WrapAlignment.center,
-                        runSpacing: 20,
-                        children: [
-                          InkWell(
-                            onTap: () {
-                              //Navigator.push(context,  MaterialPageRoute(builder: (context)=>Login(),),);
-                            },
-                            child:  Card(
-                
-                              child: SizedBox(
-                                width: 200,
-                                height: 150,
-                                child: Padding(
-                                  padding: EdgeInsets.all(20.0),
-                                  child: Column(
-                                    children: [
-                                      Icon(Icons.category, size: 50,),
-                                      SizedBox(height: 10),
-                                      Text('Gestion catégories produits'),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                
-                
-                          //SizedBox(width: 30),
-                          SizedBox(
-                            width: 200,
-                            height: 150,
-                            child: InkWell(
-                              onTap: () {
-                                //code
-                              },
-                              child: Card(
-                                child: Padding(
-                                  padding: EdgeInsets.all(20.0),
-                                  child: Column(
-                                    children: [
-                                      Icon(Icons.list_rounded, size: 50,),
-                                      SizedBox(height: 10),
-                                      Text('Gestion types de produits'),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                
-                
-                
-                          //SizedBox(width: 30),
-                          SizedBox(
-                            width: 200,
-                            height: 150,
-                            child: InkWell(
-                              onTap: () {
-                                //code
-                              },
-                              child: Card(
-                                child: Padding(
-                                  padding: EdgeInsets.all(20.0),
-                                  child: Column(
-                                    children: [
-                                      Icon(Icons.inventory, size: 50,),
-                                      SizedBox(height: 10),
-                                      Text('Gestion des produits'),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                
-                
-                          //SizedBox(width: 30),
-                          SizedBox(
-                            width: 200,
-                            height: 150,
-                            child: InkWell(
-                              onTap: () {
-                                //code
-                              },
-                              child: Card(
-                                child: Padding(
-                                  padding: EdgeInsets.all(20.0),
-                                  child: Column(
-                                    children: [
-                                      Icon(Icons.storage, size: 50,),
-                                      SizedBox(height: 10),
-                                      Text('Gestion types de stocks'),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                
-                          //SizedBox(width: 30),
-                          SizedBox(
-                            width: 200,
-                            height: 150,
-                            child: InkWell(
-                              onTap: () {
-                                //code
-                              },
-                              child: Card(
-                                child: Padding(
-                                  padding: EdgeInsets.all(20.0),
-                                  child: Column(
-                                    children: [
-                                      Icon(Icons.input, size: 50,),
-                                      SizedBox(height: 10),
-                                      Text('Gestion des entrées en stock'),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                
-                
-                          //SizedBox(width: 30),
-                          SizedBox(
-                            width: 200,
-                            height: 150,
-                            child: InkWell(
-                              onTap: () {
-                                //code
-                              },
-                              child: Card(
-                                child: Padding(
-                                  padding: EdgeInsets.all(20.0),
-                                  child: Column(
-                                    children: [
-                                      Icon(Icons.article, size: 50,),
-                                      SizedBox(height: 10),
-                                      Text('Liste Produits'),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                
-                
-                          //SizedBox(width: 30),
-                          SizedBox(
-                            width: 200,
-                            height: 150,
-                            child: InkWell(
-                              onTap: () {
-                                //code
-                              },
-                              child: Card(
-                                child: Padding(
-                                  padding: EdgeInsets.all(20.0),
-                                  child: Column(
-                                    children: [
-                                      Icon(Icons.storage, size: 50,),
-                                      SizedBox(height: 10),
-                                      Text('Nos stocks'),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                
-                          //SizedBox(width: 30),
-                          SizedBox(
-                            width: 200,
-                            height: 150,
-                            child: InkWell(
-                              onTap: () {
-                                //code
-                              },
-                              child: Card(
-                                child: Padding(
-                                  padding: EdgeInsets.all(20.0),
-                                  child: Column(
-                                    children: [
-                                      Icon(Icons.input, size: 50,),
-                                      SizedBox(height: 10),
-                                      Text('Nos entrées en stock'),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      )
-                
-                    ],
+            ),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    // ignore: deprecated_member_use
+                    color: primaryColor.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(
+                    Icons.inventory_2,
+                    color: primaryColor,
+                    size: 28,
                   ),
                 ),
+                const SizedBox(width: 16),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      widget.titreGestionStockMenu,
+                      style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                        fontWeight: FontWeight.w700,
+                        color: primaryColor,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Gérez vos produits et stocks efficacement',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Colors.grey[600],
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 28),
+          
+          // Content Grid
+          Expanded(
+            child: SingleChildScrollView(
+              child: Container(
+                width: double.infinity,
+                child: Wrap(
+                  spacing: 24,
+                  runSpacing: 24,
+                  alignment: WrapAlignment.start,
+                  children: [
+                  _buildSmartCard(
+                    context,
+                    index: 0,
+                    icon: Icons.category,
+                    title: 'Types de Produits',
+                    description: 'Créer et gérer',
+                    color: Color(0xFF1976D2),
+                    onTap: () {
+                      showDialog(
+                        context: context,
+                        builder: (BuildContext context) {
+                          return Dialog(
+                            child: SizedBox(
+                              width: 650,
+                              height: 500,
+                              child: TypeProduit(
+                                identreprise: widget.identreprise,
+                              ),
+                            ),
+                          );
+                        },
+                      );
+                    },
+                  ),
+                  _buildSmartCard(
+                    context,
+                    index: 1,
+                    icon: Icons.list_rounded,
+                    title: 'Catégories',
+                    description: 'Organiser',
+                    color: Color(0xFF388E3C),
+                    onTap: () {
+                      showDialog(
+                        context: context,
+                        builder: (BuildContext context) {
+                          return Dialog(
+                            child: SizedBox(
+                              width: 650,
+                              height: 500,
+                              child: Categoryproduit(
+                                identreprise: widget.identreprise,
+                              ),
+                            ),
+                          );
+                        },
+                      );
+                    },
+                  ),
+                  _buildSmartCard(
+                    context,
+                    index: 2,
+                    icon: Icons.article,
+                    title: 'Identification',
+                    description: 'Produits détaillés',
+                    color: Color(0xFFF57C00),
+                    onTap: () {
+                      showDialog(
+                        context: context,
+                        builder: (BuildContext context) {
+                          return Dialog(
+                            child: SizedBox(
+                              width: 720,
+                              height: 580,
+                              child: Identificationproduit(
+                                identreprise: widget.identreprise,
+                              ),
+                            ),
+                          );
+                        },
+                      );
+                    },
+                  ),
+                  _buildSmartCard(
+                    context,
+                    index: 3,
+                    icon: Icons.storage,
+                    title: 'Types de Stocks',
+                    description: 'Configuration',
+                    color: Color(0xFF7B1FA2),
+                    onTap: () {
+                      // code
+                      showDialog(
+                        context: context,
+                        builder: (BuildContext context) {
+                          return Dialog(
+                            child: SizedBox(
+                              width: 650,
+                              height: 500,
+                              child: TypeStock(
+                                identreprise: widget.identreprise,
+                              ),
+                            ),
+                          );
+                    },
+                  );
+                },
+                  ),
+                  _buildSmartCard(
+                    context,
+                    index: 4,
+                    icon: Icons.input,
+                    title: 'Entrées',
+                    description: 'Stock entrant',
+                    color: Color(0xFFD32F2F),
+                    onTap: () {
+                      // code
+                    },
+                  ),
+                  _buildSmartCard(
+                    context,
+                    index: 5,
+                    icon: Icons.inventory,
+                    title: 'Liste Produits',
+                    description: 'Tous vos produits',
+                    color: Color(0xFF0097A7),
+                    onTap: () {
+                      // code
+                    },
+                  ),
+                  _buildSmartCard(
+                    context,
+                    index: 6,
+                    icon: Icons.warehouse,
+                    title: 'Nos Stocks',
+                    description: 'Quantités actuelles',
+                    color: Color(0xFF00796B),
+                    onTap: () {
+                      // code
+                    },
+                  ),
+                  _buildSmartCard(
+                    context,
+                    index: 7,
+                    icon: Icons.unarchive,
+                    title: 'Mouvements',
+                    description: 'Historique complet',
+                    color: Color(0xFF5E35B1),
+                    onTap: () {
+                      // code
+                    },
+                  ),
+                ],
+              ),
               ),
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildSmartCard(
+    BuildContext context, {
+    required int index,
+    required IconData icon,
+    required String title,
+    required String description,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    final isHovered = _hoveredIndex == index;
+    
+    return MouseRegion(
+      onEnter: (_) => setState(() => _hoveredIndex = index),
+      onExit: (_) => setState(() => _hoveredIndex = -1),
+      child: GestureDetector(
+        onTap: onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOutCubic,
+          width: 180,
+          height: 180,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                // ignore: deprecated_member_use
+                color: color.withOpacity(isHovered ? 0.25 : 0.08),
+                blurRadius: isHovered ? 20 : 8,
+                offset: Offset(0, isHovered ? 8 : 4),
+              ),
+            ],
+            border: Border.all(
+              // ignore: deprecated_member_use
+              color: isHovered ? color.withOpacity(0.5) : Colors.grey[200]!,
+              width: isHovered ? 2 : 1,
+            ),
+          ),
+          child: Transform.scale(
+            scale: isHovered ? 1.02 : 1.0,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Animated Icon Container
+                  AnimatedContainer(
+                    duration: const Duration(milliseconds: 300),
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      // ignore: deprecated_member_use
+                      color: color.withOpacity(isHovered ? 0.15 : 0.08),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Icon(
+                      icon,
+                      size: isHovered ? 44 : 38,
+                      color: color,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  
+                  // Title
+                  Flexible(
+                    child: Text(
+                      title,
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w700,
+                        color: Colors.grey[800],
+                        fontSize: 14,
+                      ),
+                      textAlign: TextAlign.center,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  const SizedBox(height: 5),
+                  
+                  // Description
+                  Flexible(
+                    child: Text(
+                      description,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Colors.grey[500],
+                        fontSize: 11,
+                      ),
+                      textAlign: TextAlign.center,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  
+                  if (isHovered) ...[
+                    const SizedBox(height: 8),
+                    Icon(
+                      Icons.arrow_forward_ios,
+                      size: 14,
+                      color: color,
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -649,12 +752,158 @@ class _StockMenu extends StatelessWidget {
 
 
 
-// contenu menu parametres
-class _ParametresMenu extends StatelessWidget {
+
+//contenu menu parametres
+
+class ParametresMenu extends StatefulWidget {
   final String titreMenuParametres;
   final int identreprise;
-  
-  const _ParametresMenu({required this.titreMenuParametres, required this.identreprise});
+
+  const ParametresMenu({
+    super.key,
+    required this.titreMenuParametres,
+    required this.identreprise,
+  });
+
+  @override
+  State<ParametresMenu> createState() => _ParametresMenuState();
+}
+
+class _ParametresMenuState extends State<ParametresMenu> {
+  late Future<List<Map<String, dynamic>>> _futureUtilisateurs;
+
+  @override
+  void initState() {
+    super.initState();
+    _futureUtilisateurs = fetchUtilisateurs();
+  }
+
+  Future<List<Map<String, dynamic>>> fetchUtilisateurs() async {
+    var url = Uri.parse("https://riphin-salemanager.com/beni_newlook_API/AfficherUtilisateurs.php");
+    var response = await http.post(
+      url,
+      headers: {'Content-Type': 'application/json'},
+      body: json.encode({"entreprise": widget.identreprise}),
+    );
+
+    if (response.statusCode == 200) {
+      var data = json.decode(response.body);
+      if (data['success']) {
+        return List<Map<String, dynamic>>.from(data['data']);
+      } else {
+        throw Exception(data['erro'] ?? "Erreur inconnue");
+      }
+    } else {
+      throw Exception("Erreur serveur: ${response.statusCode}");
+    }
+  }
+
+  Future<void> supprimerUtilisateur(int idUtilisateur) async {
+    var url = Uri.parse("https://riphin-salemanager.com/beni_newlook_API/DeleteUtilisateur.php");
+    var response = await http.post(
+      url,
+      headers: {'Content-Type': 'application/json'},
+      body: json.encode({"id": idUtilisateur}),
+    );
+
+    if (response.statusCode == 200) {
+      var data = json.decode(response.body);
+      if (data['success']) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Utilisateur supprimé avec succès")),
+        );
+        setState(() {
+          _futureUtilisateurs = fetchUtilisateurs();
+        });
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Erreur: ${data['error']}")),
+        );
+      }
+    }
+  }
+
+  void modifierUtilisateur(Map<String, dynamic> user) {
+    final TextEditingController nomController =
+        TextEditingController(text: user['Nom_utilisateur']);
+    final TextEditingController telController =
+        TextEditingController(text: user['telephone']);
+    final TextEditingController passwordController =
+        TextEditingController(text: user['Motdepass']);
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Dialog(
+          child: SizedBox(
+            width: 400,
+            height: 300,
+            child: Padding(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                children: [
+                  const Text("Modifier Utilisateur",
+                      style: TextStyle(fontWeight: FontWeight.bold)),
+                  TextField(
+                    controller: nomController,
+                    decoration: const InputDecoration(labelText: "Nom"),
+                  ),
+                  TextField(
+                    controller: telController,
+                    decoration: const InputDecoration(labelText: "Téléphone"),
+                  ),
+                  TextField(
+                    controller: passwordController,
+                    decoration: const InputDecoration(labelText: "Mot de pass"),
+                  ),
+                  const SizedBox(height: 20),
+                  ElevatedButton(
+                    onPressed: () async {
+                      var url = Uri.parse(
+                          "https://riphin-salemanager.com/beni_newlook_API/ModifierUtilisateur.php");
+                      var response = await http.post(
+                        url,
+                        headers: {'Content-Type': 'application/json'},
+                        body: json.encode({
+                          "id": user['ID_utilisateur'],
+                          "name": nomController.text,
+                          "phone": telController.text,
+                          "keypassword":passwordController.text
+                        }),
+                      );
+
+                      if (response.statusCode == 200) {
+                        var data = json.decode(response.body);
+                        if (data['success']==true) {
+                          // ignore: use_build_context_synchronously
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                                content: Text("Utilisateur modifié avec succès")),
+                          );
+                          //print(user['ID_utilisateur']);
+                          setState(() {
+                            _futureUtilisateurs = fetchUtilisateurs();
+                          });
+                          // ignore: use_build_context_synchronously
+                          Navigator.pop(context);
+                        } else {
+                          // ignore: use_build_context_synchronously
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text("Erreur: ${data['error']}")),
+                          );
+                        }
+                      }
+                    },
+                    child: const Text("Enregistrer"),
+                  )
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -663,12 +912,59 @@ class _ParametresMenu extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            titreMenuParametres,
-            style: Theme.of(context).textTheme.titleLarge,
-            textAlign: TextAlign.center,
+          // 👇 Titre + IconButtons sur la même ligne
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                widget.titreMenuParametres,
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
+              Row(
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.person, size: 30, color: Colors.blue),
+                    tooltip: "Utilisateurs",
+                    onPressed: () {
+                      showDialog(
+                        context: context,
+                        builder: (BuildContext context) {
+                          return Dialog(
+                            child: SizedBox(
+                              width: 650,
+                              height: 500,
+                              child: Utilisateurs(identreprise: widget.identreprise),
+                            ),
+                          );
+                        },
+                      );
+                    },
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.house_sharp, size: 30, color: Colors.green),
+                    tooltip: "Entreprise",
+                    onPressed: () {
+                      showDialog(
+                        context: context,
+                        builder: (BuildContext context) {
+                          return Dialog(
+                            child: SizedBox(
+                              width: 650,
+                              height: 500,
+                              child: Entreprise(),
+                            ),
+                          );
+                        },
+                      );
+                    },
+                  ),
+                ],
+              ),
+            ],
           ),
+
           const SizedBox(height: 16),
+
           Expanded(
             child: Container(
               decoration: BoxDecoration(
@@ -676,109 +972,80 @@ class _ParametresMenu extends StatelessWidget {
                 border: Border.all(color: Theme.of(context).dividerColor),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: SingleChildScrollView(
-                child: Center(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Wrap(
-                        spacing: 30,
-                        runSpacing: 20,
-                        children: [
-                          Row(
-                            children: [
-                              Wrap(
-                                
-                                spacing: 30,
-                                runSpacing: 20,
-                                alignment: WrapAlignment.center,
-                                children: [
-                                  // Exemple avec InkWell
-                                  SizedBox(
-                                    width: 680,
-                                    height: 475,
-                                      child: Card(
-                                        child: Padding(
-                                          padding: const EdgeInsets.all(20.0),
-                                          child: Column(
-                                            children: const [
-                                              SizedBox(height: 10),
-                                              Text(
-                                                'Utilisateurs',
-                                                style: TextStyle(
-                                                  fontWeight: FontWeight.bold,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      ),
-                                    
-                                  ),
+              child: FutureBuilder<List<Map<String, dynamic>>>(
+                future: _futureUtilisateurs,
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator());
+                  } else if (snapshot.hasError) {
+                    return Center(child: Text("Erreur: ${snapshot.error}"));
+                  } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                    return const Center(child: Text("Aucun utilisateur trouvé"));
+                  }
 
-                                  const SizedBox(width: 5),
+                  final utilisateurs = snapshot.data!;
 
-                                  // Exemple avec IconButton
-                                  SizedBox(
-                                    width: 200,
-                                    height: 475,
-                                    child: Card(
-                                      child: Padding(
-                                        padding: const EdgeInsets.all(20.0),
-                                        child: Column(
-                                          children: [
-                                            IconButton(
-                                              onPressed: () {
-                                                showDialog(
-                                                  context: context, 
-                                                  builder: (BuildContext context){
-                                                      return Dialog(
-                                                        child: SizedBox(
-                                                          width: 650,
-                                                          height: 500,
-                                                          child: Utilisateurs(identreprise: identreprise,)
-                                                        ),
-                                                      );
-                                                  }
-                                                 
-                                                  );
-                                              },
-                                              icon: const Icon(Icons.person,
-                                                  size: 70),
-                                            ),
-                                            const SizedBox(height: 20),
-                                            IconButton(
-                                              onPressed: () {
-                                                showDialog(
-                                                  context: context, 
-                                                  builder: (BuildContext context){
-                                                    return Dialog(
-                                                      child: SizedBox(
-                                                        width: 650,
-                                                        height: 500,
-                                                        child: Entreprise(),
-                                                      ),
-                                                    );
-                                                  });
-                                              },
-                                              icon: const Icon(
-                                                  Icons.house_sharp,
-                                                  size: 70),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              )
-                            ],
+                  return Padding(
+                    padding: const EdgeInsets.all(12),
+                    child: SingleChildScrollView(
+                      scrollDirection: Axis.vertical,
+                      child: SizedBox(
+                        width: double.infinity,
+                        child: DataTable(
+                          headingRowColor: WidgetStateProperty.all(Color.fromARGB(255, 121, 169, 240).withOpacity(0.15)),
+                          headingRowHeight: 56,
+                          dataRowHeight: 56,
+                          columnSpacing: 16,
+                          border: TableBorder(
+                            horizontalInside: BorderSide(color: Colors.grey[300]!),
+                            bottom: BorderSide(color: Colors.grey[300]!),
+                            top: BorderSide(color: Colors.grey[300]!),
                           ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
+                          columns: const [
+                            DataColumn(label: Text("ID", style: TextStyle(fontWeight: FontWeight.bold, color: Color.fromARGB(255, 121, 169, 240)))),
+                            DataColumn(label: Text("Nom", style: TextStyle(fontWeight: FontWeight.bold, color: Color.fromARGB(255, 121, 169, 240)))),
+                            DataColumn(label: Text("Mot de passe", style: TextStyle(fontWeight: FontWeight.bold, color: Color.fromARGB(255, 121, 169, 240)))),
+                            DataColumn(label: Text("Téléphone", style: TextStyle(fontWeight: FontWeight.bold, color: Color.fromARGB(255, 121, 169, 240)))),
+                            DataColumn(label: Text("Entreprise", style: TextStyle(fontWeight: FontWeight.bold, color: Color.fromARGB(255, 121, 169, 240)))),
+                            DataColumn(label: Text("Actions", style: TextStyle(fontWeight: FontWeight.bold, color: Color.fromARGB(255, 121, 169, 240)))),
+                          ],
+                          rows: utilisateurs.asMap().entries.map((entry) {
+                            int index = entry.key;
+                            dynamic user = entry.value;
+                            return DataRow(
+                              color: WidgetStateProperty.all(
+                                index.isEven ? Colors.white : Color.fromARGB(255, 245, 248, 255),
+                              ),
+                              cells: [
+                                  DataCell(Text(user['ID_utilisateur'].toString())),
+                                  DataCell(Text(user['Nom_utilisateur'] ?? '')),
+                                  DataCell(Text(user['Motdepass'] ?? '')),
+                                  DataCell(Text(user['telephone'] ?? '')),
+                                  DataCell(Text(user['Denomination'] ?? '')),
+                                  DataCell(Row(
+                                    children: [
+                                      IconButton(
+                                        icon: const Icon(Icons.edit, color: Colors.orange),
+                                        onPressed: () {
+                                          modifierUtilisateur(user);
+                                        },
+                                      ),
+                                      IconButton(
+                                        icon: const Icon(Icons.delete, color: Colors.red),
+                                        onPressed: () {
+                                          supprimerUtilisateur(user['ID_utilisateur']);
+                                        },
+                                      ),
+                                    ],
+                                  )),
+                                ],
+                              );
+                            }).toList(),
+                          ),
+                        ),
+                      )
+                    );
+                },
               ),
             ),
           ),
