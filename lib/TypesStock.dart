@@ -16,16 +16,43 @@ class _TypeStockState extends State<TypeStock> {
   final _formKey = GlobalKey<FormState>();
   final _designationStockController = TextEditingController();
   final _descriptionStockController = TextEditingController();
+  List<Map<String, dynamic>> produits = [];
+  int? selectedProduit;
 
 
   void resetFields() {
     _designationStockController.clear();
     _descriptionStockController.clear();
+    selectedProduit = null;
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    fetchProduits();
+  }
+
+  
+  // Fonction pour récupérer les produits depuis l'API
+  Future<void> fetchProduits() async {
+    // logique pour récupérer les types de produits depuis l'API 
+    
+      var url = Uri.parse("https://riphin-salemanager.com/beni_newlook_API/GetNameProduit.php");
+      var response = await http.get(url);
+
+      if (response.statusCode == 200) {
+        final List data = jsonDecode(response.body);
+        setState(() {
+          produits =List<Map<String, dynamic>>.from(data);
+        });
+        //print(produits);
+      }
+   
   }
 
 
 
-  Future<void> addTypeStock() async {
+  Future<void> addTypeStock(double quantite) async {
     // logique d'ajout de type de produit
 
     try{
@@ -36,7 +63,9 @@ class _TypeStockState extends State<TypeStock> {
         body: json.encode({
           "designation":_designationStockController.text,
           "description":_descriptionStockController.text,
+          "produit":selectedProduit,
           "entreprise": widget.identreprise,
+          "quantiteDisponible": quantite,
         })
 
       );
@@ -187,14 +216,41 @@ class _TypeStockState extends State<TypeStock> {
                                 },
                               ),
                               SizedBox(height: 16,),
-                    
-                              
+
+                              DropdownButtonFormField<int>(
+                                decoration: InputDecoration(
+                                  labelText: 'produit associé',
+                                  labelStyle: TextStyle(color: Color.fromARGB(255, 121, 169, 240)),
+                                  prefixIcon: Icon(Icons.category, color: Color.fromARGB(255, 121, 169, 240)),
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                    borderSide: BorderSide(color: Color.fromARGB(255, 121, 169, 240)),
+                                  ),
+                                  focusedBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                    borderSide: BorderSide(color: Color.fromARGB(255, 121, 169, 240), width: 2),
+                                  )
+                                ),
+                                items: produits.map((produit) {
+                                  return DropdownMenuItem<int>(
+                                    value: produit['Idproduit'], // Assurez-vous que 'id' correspond à l'identifiant du produit
+                                    child: Text(produit['designationProduit']), // Affichez la désignation du produit
+                                  );
+                                }).toList(),
+                                onChanged: (int? newValue) {
+                                  setState(() {
+                                    selectedProduit = newValue;
+                                  });
+                                },
+                                ),
+                              SizedBox(height: 16,),
+
                     
                               ElevatedButton(
                               onPressed: () {
                                 if (_formKey.currentState!.validate()) {
                                   // Traiter la connexion
-                                  addTypeStock();
+                                  addTypeStock(0);
                                 }
                               },
                               style: ElevatedButton.styleFrom(

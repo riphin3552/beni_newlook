@@ -55,7 +55,7 @@ class _IdentificationproduitState extends State<Identificationproduit> {
   }
 
   //identifier nouveau produit
-  Future<bool> identifyProduit(double quantite) async {
+  Future<bool> identifyProduit() async {
   try {
     var url = Uri.parse("https://riphin-salemanager.com/beni_newlook_API/IdentifierProduit.php");
     var response = await http.post(
@@ -65,7 +65,6 @@ class _IdentificationproduitState extends State<Identificationproduit> {
         "designation": _designationProduitController.text,
         "prixvente": _prixUnitaireVenteController.text,
         "unite": unitemesureController.text,
-        "quantite": quantite,
         "seuilalerte": _seuilAlerteController.text,
         "categorie": selectedCategoryProduit,
         "entreprise": widget.identreprise,
@@ -197,6 +196,8 @@ class _IdentificationproduitState extends State<Identificationproduit> {
     throw Exception("Erreur serveur: ${response.statusCode}");
   }
 }
+
+
 
   
   @override
@@ -364,7 +365,7 @@ Widget build(BuildContext context) {
                           ElevatedButton.icon(
                             onPressed: () async {
                               if (_formKey.currentState!.validate()) {
-                                var success = await identifyProduit(0);
+                                var success = await identifyProduit();
                                 if (success) {
                                   setState(() {
                                     produitsFuture = fetchProduits(widget.identreprise);
@@ -470,7 +471,6 @@ Widget build(BuildContext context) {
                           DataColumn(label: Text("Désignation", style: TextStyle(fontWeight: FontWeight.bold, color: Color.fromARGB(255, 121, 169, 240)))),
                           DataColumn(label: Text("Prix", style: TextStyle(fontWeight: FontWeight.bold, color: Color.fromARGB(255, 121, 169, 240)))),
                           DataColumn(label: Text("Unité", style: TextStyle(fontWeight: FontWeight.bold, color: Color.fromARGB(255, 121, 169, 240)))),
-                          DataColumn(label: Text("Quantité", style: TextStyle(fontWeight: FontWeight.bold, color: Color.fromARGB(255, 121, 169, 240)))),
                           DataColumn(label: Text("Seuil", style: TextStyle(fontWeight: FontWeight.bold, color: Color.fromARGB(255, 121, 169, 240)))),
                           DataColumn(label: Text("Catégorie", style: TextStyle(fontWeight: FontWeight.bold, color: Color.fromARGB(255, 121, 169, 240)))),
                         ],
@@ -486,7 +486,6 @@ Widget build(BuildContext context) {
                               DataCell(Text(prod['designationProduit'])),
                               DataCell(Text(prod['PrixVente'].toString())),
                               DataCell(Text(prod['uniteMesure'])),
-                              DataCell(Text(prod['Quantite_disponible'].toString())),
                               DataCell(Text(prod['seuil_minimum'].toString())),
                               DataCell(Text(prod['designationCategorie'])),
                             ],

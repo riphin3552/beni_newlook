@@ -4,6 +4,7 @@ import 'dart:convert';
 
 
 import 'package:beni_newlook/CategoryProduit.dart';
+import 'package:beni_newlook/EntreeStock.dart';
 import 'package:beni_newlook/IdentificationProduit.dart';
 import 'package:beni_newlook/TypesStock.dart';
 import 'package:beni_newlook/pages/TypeProduit.dart';
@@ -479,7 +480,7 @@ class _StockMenuState extends State<StockMenu> {
           // Content Grid
           Expanded(
             child: SingleChildScrollView(
-              child: Container(
+              child: SizedBox(
                 width: double.infinity,
                 child: Wrap(
                   spacing: 24,
@@ -592,6 +593,20 @@ class _StockMenuState extends State<StockMenu> {
                     color: Color(0xFFD32F2F),
                     onTap: () {
                       // code
+                      showDialog(
+                        context: context,
+                        builder: (BuildContext context) {
+                          return Dialog(
+                            child: SizedBox(
+                              width: 880,
+                              height: 600,
+                              child: Entreestock(
+                                identreprise: widget.identreprise,
+                              ),
+                            ),
+                          );
+                        },
+                      );
                     },
                   ),
                   _buildSmartCard(
@@ -994,6 +1009,7 @@ class _ParametresMenuState extends State<ParametresMenu> {
                         child: DataTable(
                           headingRowColor: WidgetStateProperty.all(Color.fromARGB(255, 121, 169, 240).withOpacity(0.15)),
                           headingRowHeight: 56,
+                          // ignore: deprecated_member_use
                           dataRowHeight: 56,
                           columnSpacing: 16,
                           border: TableBorder(
