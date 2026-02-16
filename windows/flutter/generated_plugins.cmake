@@ -5,6 +5,7 @@
 list(APPEND FLUTTER_PLUGIN_LIST
   bitsdojo_window_windows
   desktop_multi_window
+  printing
   window_size
 )
 

@@ -18,12 +18,16 @@ class _CategoryproduitState extends State<Categoryproduit> {
   int? selectedTypeProduit; // variable pour stocker le type de produit sélectionné
   List<Map<String, dynamic>> typeProduits = []; // liste pour stocker les types de produits
 
+  late List<Map<String, dynamic>> categories = [];
+  late Future<List<dynamic>> categoriesFuture;
+
 
 
   @override
   void initState() {
     super.initState();
     fetchTypeProduits();
+    categoriesFuture = fetchCategoriesProduits(widget.identreprise);
 
   }
 
@@ -90,6 +94,9 @@ class _CategoryproduitState extends State<Categoryproduit> {
                   ),
                 );
                 resetFields(); // Réinitialise les champs après l'enregistrement
+                setState(() {
+                  categoriesFuture = fetchCategoriesProduits(widget.identreprise);
+                });
               }
             });
         } else {
@@ -160,140 +167,235 @@ class _CategoryproduitState extends State<Categoryproduit> {
   }
 
 
+// afficher les catégories de produits existantes
+Future<List<dynamic>> fetchCategoriesProduits(int entrepriseId) async {
+  var url = Uri.parse("https://riphin-salemanager.com/beni_newlook_API/AfficherCategoryProduit.php");
+  var response = await http.post(
+    url,
+    headers: {'Content-Type': 'application/json'},
+    body: json.encode({"entreprise": entrepriseId}),
+  );
+
+  if (response.statusCode == 200) {
+    var data = json.decode(response.body);
+
+    // ⚠️ Ton API renvoie directement une liste
+    if (data is List) {
+      return data;
+    } else {
+      return [];
+      
+    }
+    
+  } else {
+    throw Exception("Erreur serveur: ${response.statusCode}");
+  }
+}
+
+
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      
       appBar: AppBar(
-        title: Text("Categorie du produit"),
+        title: Text('Catégorie de produit'),
+        backgroundColor: Color.fromARGB(255, 121, 169, 240),
+        centerTitle: true,
       ),
-
-      body: 
-                 
-            Container(
-              color: const Color.fromARGB(255, 211, 225, 247),
-              child: Center(
-                child: Form(
-                  key: _formKey,
-                  child: Padding(
-                    padding: EdgeInsets.all(30),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Card(
-                          color: Colors.white,
-                          child: Padding(padding: EdgeInsets.all(20),
-                          child: Column(
-                            children: [
-                              Text("Ajouter une nouvelle catégorie ", style: TextStyle(fontWeight: FontWeight.bold),),
-                              SizedBox(height: 20,),
-                              TextFormField(
-                                controller: _designationCategController,
-                                decoration: InputDecoration(
-                                  labelText: 'Designation',
-                                  labelStyle: TextStyle(color: Color.fromARGB(255, 121, 169, 240)),
-                                  hintText: 'Designation',
-                                  prefixIcon: Icon(Icons.category_outlined, color: Color.fromARGB(255, 121, 169, 240)),
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(8),
-                                    borderSide: BorderSide(color: Color.fromARGB(255, 121, 169, 240)),
-                                  ),
-                                  focusedBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(8),
-                                    borderSide: BorderSide(color: Color.fromARGB(255, 121, 169, 240), width: 2),
-                                  ),
+      backgroundColor: const Color.fromARGB(255, 245, 248, 255),
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+            SizedBox(height: 16),
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: 16),
+              child: Card(
+                elevation: 4,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                child: ExpansionTile(
+                  initiallyExpanded: true,
+                  collapsedBackgroundColor: Color.fromARGB(255, 245, 248, 255),
+                  backgroundColor: Colors.white,
+                  title: Row(
+                    children: [
+                      Icon(Icons.add_box, color: Color.fromARGB(255, 121, 169, 240)),
+                      SizedBox(width: 12),
+                      Text(
+                        "Ajouter une Catégorie",
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                          color: Color.fromARGB(255, 121, 169, 240),
+                        ),
+                      ),
+                    ],
+                  ),
+                  children: [
+                    Padding(
+                      padding: EdgeInsets.all(24),
+                      child: Form(
+                        key: _formKey,
+                        child: Column(
+                          children: [
+                            TextFormField(
+                              controller: _designationCategController,
+                              decoration: InputDecoration(
+                                labelText: 'Désignation',
+                                labelStyle: TextStyle(color: Color.fromARGB(255, 121, 169, 240)),
+                                prefixIcon: Icon(Icons.label, color: Color.fromARGB(255, 121, 169, 240)),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                  borderSide: BorderSide(color: Color.fromARGB(255, 121, 169, 240)),
                                 ),
-                                validator: (value) {
-                                  if(value==null || value.isEmpty){
-                                    return 'veuillez entrer la designation';
-                                  }
-                                  return null;
-                                },
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                  borderSide: BorderSide(color: Color.fromARGB(255, 121, 169, 240), width: 2),
+                                ),
                               ),
-                              
-                              SizedBox(height: 16,),
-
-                              TextFormField(
-                                controller: _descriptionCategController,
-                                decoration: InputDecoration(
-                                  labelText: 'Description',
-                                  labelStyle: TextStyle(color: Color.fromARGB(255, 121, 169, 240)),
-                                  hintText: 'Description',
-                                  prefixIcon: Icon(Icons.description_outlined, color: Color.fromARGB(255, 121, 169, 240)),
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(8),
-                                    borderSide: BorderSide(color: Color.fromARGB(255, 121, 169, 240)),
-                                  ),
-                                  focusedBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(8),
-                                    borderSide: BorderSide(color: Color.fromARGB(255, 121, 169, 240), width: 2),
-                                  ),
+                              validator: (value) => value == null || value.isEmpty ? 'Veuillez entrer la désignation' : null,
+                            ),
+                            SizedBox(height: 20),
+                            TextFormField(
+                              controller: _descriptionCategController,
+                              decoration: InputDecoration(
+                                labelText: 'Description',
+                                labelStyle: TextStyle(color: Color.fromARGB(255, 121, 169, 240)),
+                                prefixIcon: Icon(Icons.description, color: Color.fromARGB(255, 121, 169, 240)),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                  borderSide: BorderSide(color: Color.fromARGB(255, 121, 169, 240)),
                                 ),
-                                validator: (value) {
-                                  if(value==null || value.isEmpty){
-                                    return 'veuillez entrer la description';
-                                  }
-                                  return null;
-                                },
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                  borderSide: BorderSide(color: Color.fromARGB(255, 121, 169, 240), width: 2),
+                                ),
                               ),
-                              SizedBox(height: 16,),
-
-                              DropdownButtonFormField<int>(
-                                decoration: InputDecoration(
-                                  labelText: 'Type de produit',
-                                  labelStyle: TextStyle(color: Color.fromARGB(255, 121, 169, 240)),
-                                  prefixIcon: Icon(Icons.category, color: Color.fromARGB(255, 121, 169, 240)),
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(8),
-                                    borderSide: BorderSide(color: Color.fromARGB(255, 121, 169, 240)),
-                                  ),
-                                  focusedBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(8),
-                                    borderSide: BorderSide(color: Color.fromARGB(255, 121, 169, 240), width: 2),
-                                  )
+                              validator: (value) => value == null || value.isEmpty ? 'Veuillez entrer la description' : null,
+                            ),
+                            SizedBox(height: 20),
+                            DropdownButtonFormField<int>(
+                              decoration: InputDecoration(
+                                labelText: 'Type de produit',
+                                labelStyle: TextStyle(color: Color.fromARGB(255, 121, 169, 240)),
+                                prefixIcon: Icon(Icons.category, color: Color.fromARGB(255, 121, 169, 240)),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                  borderSide: BorderSide(color: Color.fromARGB(255, 121, 169, 240)),
                                 ),
-                                items: typeProduits.map((type) {
-                                  return DropdownMenuItem<int>(
-                                    value: type['Id_typeProduit'], // Assurez-vous que 'id' correspond à l'identifiant du type de produit
-                                    child: Text(type['designationType']), // Affichez la désignation du type de produit
-                                  );
-                                }).toList(),
-                                onChanged: (int? newValue) {
-                                  setState(() {
-                                    selectedTypeProduit = newValue;
-                                  });
-                                },
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                  borderSide: BorderSide(color: Color.fromARGB(255, 121, 169, 240), width: 2),
                                 ),
-                              SizedBox(height: 16,),
-                    
-                              ElevatedButton(
+                              ),
+                              items: typeProduits.map((type) {
+                                return DropdownMenuItem<int>(
+                                  value: type['Id_typeProduit'],
+                                  child: Text(type['designationType']),
+                                );
+                              }).toList(),
+                              onChanged: (int? newValue) {
+                                setState(() {
+                                  selectedTypeProduit = newValue;
+                                });
+                              },
+                              validator: (value) => value == null ? 'Veuillez sélectionner un type' : null,
+                            ),
+                            SizedBox(height: 28),
+                            ElevatedButton.icon(
                               onPressed: () {
                                 if (_formKey.currentState!.validate()) {
-                                  // Traiter la connexion
                                   addCategoryProduit();
                                 }
                               },
+                              icon: Icon(Icons.check),
+                              label: Text('Enregistrer', style: TextStyle(fontSize: 14.0, fontWeight: FontWeight.w600)),
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Color.fromARGB(255, 121, 169, 240),
-                                // Utilise double.infinity pour que le bouton prenne la largeur maximale disponible
-                                  minimumSize: Size(double.infinity, 50),
-                                ),
-                              child: Text('Ajouter', style: TextStyle(fontSize: 12.0,color: Colors.white),
+                                foregroundColor: Colors.white,
+                                minimumSize: Size(double.infinity, 54),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                elevation: 3,
+                              ),
                             ),
-                        )
-                    
-                            ],
-                          )
-                          
-                          ),
-                          
-                        )
-                      ],
+                          ],
+                        ),
+                      ),
                     ),
-                  )
+                  ],
                 ),
-              )
-            )
-          );
+              ),
+            ),
+            SizedBox(height: 24),
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: 16),
+              child: FutureBuilder<List<dynamic>>(
+                future: categoriesFuture,
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(Color.fromARGB(255, 121, 169, 240))));
+                  } else if (snapshot.hasError) {
+                    return Card(
+                      elevation: 2,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      child: Padding(padding: EdgeInsets.all(20), child: Text("Erreur: ${snapshot.error}", style: TextStyle(color: Colors.red))),
+                    );
+                  } else {
+                    final categories = snapshot.data ?? [];
+                    if (categories.isEmpty) {
+                      return Card(
+                        elevation: 2,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        child: Padding(
+                          padding: EdgeInsets.all(40),
+                          child: Center(child: Text("Aucune catégorie trouvée", style: TextStyle(color: Colors.grey[600]))),
+                        ),
+                      );
+                    }
+                    return SizedBox(
+                      width: double.infinity,
+                      child: Card(
+                        elevation: 4,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        child: SizedBox(
+                          width: double.infinity,
+                          child: DataTable(
+                            headingRowColor: WidgetStateProperty.all(Color.fromARGB(255, 121, 169, 240).withOpacity(0.15)),
+                            headingRowHeight: 56,
+                            // ignore: deprecated_member_use
+                            dataRowHeight: 48,
+                            border: TableBorder(
+                              horizontalInside: BorderSide(color: Colors.grey[300]!),
+                              bottom: BorderSide(color: Colors.grey[300]!),
+                              top: BorderSide(color: Colors.grey[300]!),
+                            ),
+                            columns: const [
+                              DataColumn(label: Text("ID", style: TextStyle(fontWeight: FontWeight.bold, color: Color.fromARGB(255, 121, 169, 240)))),
+                              DataColumn(label: Text("Désignation", style: TextStyle(fontWeight: FontWeight.bold, color: Color.fromARGB(255, 121, 169, 240)))),
+                              DataColumn(label: Text("Description", style: TextStyle(fontWeight: FontWeight.bold, color: Color.fromARGB(255, 121, 169, 240)))),
+                              DataColumn(label: Text("Type", style: TextStyle(fontWeight: FontWeight.bold, color: Color.fromARGB(255, 121, 169, 240)))),
+                            ],
+                            rows: categories.map((categ) {
+                              return DataRow(
+                                cells: [
+                                  DataCell(Text(categ['idCategorie'].toString())),
+                                  DataCell(Text(categ['designationCategorie'] ?? "")),
+                                  DataCell(Text(categ['descriptionCategorie'] ?? "")),
+                                  DataCell(Text(categ['designationType'] ?? "")),
+                                ],
+                              );
+                            }).toList(),
+                          ),
+                        ),
+                      ),
+                    );
+                  }
+                },
+              ),
+            ),
+            SizedBox(height: 24),
+          ],
+        ),
+      ),
+    );
   }
 }

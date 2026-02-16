@@ -27,6 +27,9 @@ class _EntreestockState extends State<Entreestock> {
   List <Map<String, dynamic>> fournisseurs = [];
   final TextEditingController _fournisseurController = TextEditingController();
   int? selectedFournisseur;
+  final TextEditingController _searchProductController = TextEditingController();
+  final TextEditingController _filterStartDateController = TextEditingController();
+  final TextEditingController _filterEndDateController = TextEditingController();
   
   late Future<List<dynamic>> entreesFuture;
 
@@ -379,7 +382,7 @@ Future<List<dynamic>> fetchEntreeProduits(int entrepriseId) async {
                                 ),
                               ),
                               onTap: () async {
-                                FocusScope.of(context).requestFocus(new FocusNode());
+                                FocusScope.of(context).requestFocus(FocusNode());
                                 DateTime? pickedDate = await showDatePicker(
                                   context: context,
                                   initialDate: DateTime.now(),
@@ -488,6 +491,124 @@ Future<List<dynamic>> fetchEntreeProduits(int entrepriseId) async {
 
             
             SizedBox(height: 24),
+            // Filtres de recherche
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: 16),
+              child: Card(
+                elevation: 4,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: TypeAheadField<Map<String, dynamic>>(
+                          controller: _searchProductController,
+                          suggestionsCallback: (pattern) {
+                            return produits.where((prod) =>
+                                prod['designationProduit'].toString().toLowerCase().contains(pattern.toLowerCase())
+                            ).toList();
+                          },
+                          builder: (context, controller, focusNode) {
+                            return TextField(
+                              controller: controller,
+                              focusNode: focusNode,
+                              decoration: InputDecoration(
+                                labelText: 'Rechercher produit',
+                                labelStyle: TextStyle(color: Color.fromARGB(255, 121, 169, 240)),
+                                prefixIcon: Icon(Icons.search, color: Color.fromARGB(255, 121, 169, 240)),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                  borderSide: BorderSide(color: Color.fromARGB(255, 121, 169, 240)),
+                                ),
+                                contentPadding: EdgeInsets.symmetric(vertical: 14, horizontal: 12),
+                                isDense: true,
+                              ),
+                              onChanged: (value) => setState(() {}),
+                            );
+                          },
+                          itemBuilder: (context, suggestion) {
+                            return ListTile(
+                              title: Text(suggestion['designationProduit']),
+                            );
+                          },
+                          onSelected: (suggestion) {
+                            setState(() {
+                              _searchProductController.text = suggestion['designationProduit'];
+                            });
+                          },
+                        ),
+                      ),
+                      SizedBox(width: 12),
+                      Expanded(
+                        child: TextField(
+                          controller: _filterStartDateController,
+                          readOnly: true,
+                          decoration: InputDecoration(
+                            labelText: 'Date début',
+                            labelStyle: TextStyle(color: Color.fromARGB(255, 121, 169, 240)),
+                            prefixIcon: Icon(Icons.calendar_today, color: Color.fromARGB(255, 121, 169, 240)),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                              borderSide: BorderSide(color: Color.fromARGB(255, 121, 169, 240)),
+                            ),
+                            contentPadding: EdgeInsets.symmetric(vertical: 14, horizontal: 12),
+                            isDense: true,
+                          ),
+                          onTap: () async {
+                            DateTime? pickedDate = await showDatePicker(
+                              context: context,
+                              initialDate: DateTime.now(),
+                              firstDate: DateTime(2000),
+                              lastDate: DateTime(2101),
+                            );
+                            if (pickedDate != null) {
+                              String formattedDate = "${pickedDate.year}-${pickedDate.month.toString().padLeft(2, '0')}-${pickedDate.day.toString().padLeft(2, '0')}";
+                              setState(() {
+                                _filterStartDateController.text = formattedDate;
+                              });
+                            }
+                          },
+                        ),
+                      ),
+                      SizedBox(width: 12),
+                      Expanded(
+                        child: TextField(
+                          controller: _filterEndDateController,
+                          readOnly: true,
+                          decoration: InputDecoration(
+                            labelText: 'Date fin',
+                            labelStyle: TextStyle(color: Color.fromARGB(255, 121, 169, 240)),
+                            prefixIcon: Icon(Icons.event, color: Color.fromARGB(255, 121, 169, 240)),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                              borderSide: BorderSide(color: Color.fromARGB(255, 121, 169, 240)),
+                            ),
+                            contentPadding: EdgeInsets.symmetric(vertical: 14, horizontal: 12),
+                            isDense: true,
+                          ),
+                          onTap: () async {
+                            DateTime? pickedDate = await showDatePicker(
+                              context: context,
+                              initialDate: DateTime.now(),
+                              firstDate: DateTime(2000),
+                              lastDate: DateTime(2101),
+                            );
+                            if (pickedDate != null) {
+                              String formattedDate = "${pickedDate.year}-${pickedDate.month.toString().padLeft(2, '0')}-${pickedDate.day.toString().padLeft(2, '0')}";
+                              setState(() {
+                                _filterEndDateController.text = formattedDate;
+                              });
+                            }
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            SizedBox(height: 16),
             // Affichage de la liste des entrées en stock
             Padding(
               padding: EdgeInsets.symmetric(horizontal: 16),
@@ -523,8 +644,20 @@ Future<List<dynamic>> fetchEntreeProduits(int entrepriseId) async {
                       ),
                     );
                   } else {
-                    final entrees = snapshot.data ?? [];
-                    if (entrees.isEmpty) {
+                    var entrees = snapshot.data ?? [];
+                    
+                    // Filtrage des données
+                    var filteredEntrees = entrees.where((e) {
+                      bool matchesProduct = _searchProductController.text.isEmpty ||
+                          (e['designationProduit'] ?? "").toString().toLowerCase().contains(_searchProductController.text.toLowerCase());
+                      bool matchesStartDate = _filterStartDateController.text.isEmpty ||
+                          (e['DateEntree'] ?? "").compareTo(_filterStartDateController.text) >= 0;
+                      bool matchesEndDate = _filterEndDateController.text.isEmpty ||
+                          (e['DateEntree'] ?? "").compareTo(_filterEndDateController.text) <= 0;
+                      return matchesProduct && matchesStartDate && matchesEndDate;
+                    }).toList();
+
+                    if (filteredEntrees.isEmpty) {
                       return Card(
                         elevation: 2,
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -535,7 +668,7 @@ Future<List<dynamic>> fetchEntreeProduits(int entrepriseId) async {
                               Icon(Icons.inbox_outlined, size: 48, color: Colors.grey[400]),
                               SizedBox(height: 12),
                               Text(
-                                "Aucune entrée en stock",
+                                entrees.isEmpty ? "Aucune entrée en stock" : "Aucun résultat trouvé",
                                 style: TextStyle(fontSize: 14, color: Colors.grey[600]),
                               ),
                               SizedBox(height: 8),
@@ -556,8 +689,10 @@ Future<List<dynamic>> fetchEntreeProduits(int entrepriseId) async {
                         scrollDirection: Axis.horizontal,
                         child: DataTable(
                           headingRowColor: WidgetStateProperty.all(
+                              // ignore: deprecated_member_use
                               Color.fromARGB(255, 121, 169, 240).withOpacity(0.15)),
                           headingRowHeight: 56,
+                          // ignore: deprecated_member_use
                           dataRowHeight: 48,
                           border: TableBorder(
                             horizontalInside: BorderSide(color: Colors.grey[300]!),
@@ -574,8 +709,8 @@ Future<List<dynamic>> fetchEntreeProduits(int entrepriseId) async {
                             DataColumn(label: Text("Fournisseur", style: TextStyle(fontWeight: FontWeight.bold, color: Color.fromARGB(255, 121, 169, 240)))),
                             DataColumn(label: Text("Actions", style: TextStyle(fontWeight: FontWeight.bold, color: Color.fromARGB(255, 121, 169, 240)))),
                           ],
-                          rows: List.generate(entrees.length, (index) {
-                            final e = entrees[index];
+                          rows: List.generate(filteredEntrees.length, (index) {
+                            final e = filteredEntrees[index];
                             return DataRow(
                               color: WidgetStateProperty.all(
                                 index.isEven

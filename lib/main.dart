@@ -19,8 +19,10 @@ import 'dart:async';
 
 
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:beni_newlook/Rapports/RapportStocks.dart';
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
   runApp(const MyApp(titre: "G-Newlook"));
   doWhenWindowReady(() {
     const initialSize = Size(600, 600);
@@ -149,7 +151,7 @@ class _MainMenuState extends State<MainMenu> {
         'Authorization': token, // 👈 envoie le token brut
         'Content-Type': 'application/json',
       },
-    ).timeout(const Duration(seconds: 5));
+    ).timeout(const Duration(seconds: 20));
 
 
     final data = json.decode(response.body);
@@ -413,8 +415,36 @@ class StockMenu extends StatefulWidget {
   State<StockMenu> createState() => _StockMenuState();
 }
 
+
+// contenu menu rapports
+// class RapportPage extends StatelessWidget {
+//   final int idEse;
+
+//   const RapportPage({super.key, required this.idEse});
+
+//   @override
+//   Widget build(BuildContext context) {
+//     return Scaffold(
+//       appBar: AppBar(title: const Text("Rapport PDF")),
+//       body: Center(
+//         child: ElevatedButton(
+//           onPressed: () {
+//             // Appel de la fonction utilitaire pour générer le PDF
+//             buildPdf(idEse);
+//           },
+//           child: const Text("Générer le rapport"),
+//         ),
+//       ),
+//     );
+//   }
+// }
+
+
+
+
 class _StockMenuState extends State<StockMenu> {
   int _hoveredIndex = -1;
+
 
   @override
   Widget build(BuildContext context) {
@@ -574,7 +604,7 @@ class _StockMenuState extends State<StockMenu> {
                           return Dialog(
                             child: SizedBox(
                               width: 650,
-                              height: 500,
+                              height: 520,
                               child: TypeStock(
                                 identreprise: widget.identreprise,
                               ),
@@ -629,6 +659,12 @@ class _StockMenuState extends State<StockMenu> {
                     color: Color(0xFF00796B),
                     onTap: () {
                       // code
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => PdfPreviewPage(idEse: widget.identreprise),
+                        )
+                        );
                     },
                   ),
                   _buildSmartCard(
