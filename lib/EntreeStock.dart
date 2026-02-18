@@ -1,8 +1,19 @@
 import 'dart:convert';
 
+//import 'package:beni_newlook/Rapports/RapportEntrees.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_typeahead/flutter_typeahead.dart';
 import 'package:http/http.dart' as http;
+
+import 'package:pdf/pdf.dart';
+import 'package:pdf/widgets.dart' as pw;
+import 'package:printing/printing.dart';
+//import 'package:google_fonts/google_fonts.dart';
+
+
+
+
 
 
 // ignore: must_be_immutable
@@ -205,7 +216,30 @@ Future<void> ajouterEntreeStock() async {
   }
 
 //Afficher liste des entrees en stock
-Future<List<dynamic>> fetchEntreeProduits(int entrepriseId) async {
+// Future<List<dynamic>> fetchEntreeProduits(int entrepriseId) async {
+//   var url = Uri.parse("https://riphin-salemanager.com/beni_newlook_API/AfficherEntreeProduits.php");
+//   var response = await http.post(
+//     url,
+//     headers: {'Content-Type': 'application/json'},
+//     body: json.encode({"entreprise": entrepriseId}),
+//   );
+
+//   if (response.statusCode == 200) {
+//     var data = json.decode(response.body);
+
+//     // ⚠️ Ton API renvoie directement une liste
+//     if (data is List) {
+//       return data;
+//     } else {
+//       return [];
+//     }
+//   } else {
+//     throw Exception("Erreur serveur: ${response.statusCode}");
+//   }
+// }
+
+
+Future<List<Map<String, dynamic>>> fetchEntreeProduits(int entrepriseId) async {
   var url = Uri.parse("https://riphin-salemanager.com/beni_newlook_API/AfficherEntreeProduits.php");
   var response = await http.post(
     url,
@@ -216,9 +250,10 @@ Future<List<dynamic>> fetchEntreeProduits(int entrepriseId) async {
   if (response.statusCode == 200) {
     var data = json.decode(response.body);
 
-    // ⚠️ Ton API renvoie directement une liste
+    // ⚠️ Ton API renvoie une liste d’objets JSON
     if (data is List) {
-      return data;
+      // 👇 conversion explicite en List<Map<String, dynamic>>
+      return data.map((e) => Map<String, dynamic>.from(e)).toList();
     } else {
       return [];
     }
@@ -226,6 +261,7 @@ Future<List<dynamic>> fetchEntreeProduits(int entrepriseId) async {
     throw Exception("Erreur serveur: ${response.statusCode}");
   }
 }
+
 
 
 
@@ -603,6 +639,35 @@ Future<List<dynamic>> fetchEntreeProduits(int entrepriseId) async {
                           },
                         ),
                       ),
+                      SizedBox(width: 12),
+                      ElevatedButton(
+                        onPressed: () async{
+                          // Action d'impression
+                          final entrees = await fetchEntreeProduits(widget.identreprise);
+                          // ⚠️ Conversion explicite en List<Map<String, dynamic>>
+                      
+                          final entreesList=entrees.map((e)=> Map<String, dynamic>.from(e)).toList();
+                          // 👉 Ouvrir la page de prévisualisation PDF
+                            Navigator.push(
+                              // ignore: use_build_context_synchronously
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => PdfPrevisualiserPage(
+                                  idEse: widget.identreprise,
+                                  entrees: entreesList,
+                                ),
+                              ),
+                            );
+
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Color.fromARGB(255, 121, 169, 240),
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                          padding: EdgeInsets.all(14),
+                        ),
+                        child: Icon(Icons.print),
+                      ),
                     ],
                   ),
                 ),
@@ -612,7 +677,7 @@ Future<List<dynamic>> fetchEntreeProduits(int entrepriseId) async {
             // Affichage de la liste des entrées en stock
             Padding(
               padding: EdgeInsets.symmetric(horizontal: 16),
-              child: FutureBuilder<List<dynamic>>(
+              child: FutureBuilder<List<Map<String, dynamic>>>(
                 future: fetchEntreeProduits(widget.identreprise),
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
@@ -756,6 +821,174 @@ Future<List<dynamic>> fetchEntreeProduits(int entrepriseId) async {
             SizedBox(height: 24),
           ],
         ),
+      ),
+    );
+  }
+}
+
+
+
+
+
+
+// ------------------ Modèle Entreprise ------------------
+class EntrepriseInfos {
+  final String denomination;
+  final String adresse;
+  final String telephone;
+  final String email;
+  final String logoPath; // 👈 ajout du logo
+
+  EntrepriseInfos({
+    required this.denomination,
+    required this.adresse,
+    required this.telephone,
+    required this.email,
+    required this.logoPath,
+  });
+
+  factory EntrepriseInfos.fromJson(Map<String, dynamic> json) {
+    return EntrepriseInfos(
+      denomination: json['Denomination'],
+      adresse: json['Adresse'],
+      telephone: json['Telephone'],
+      email: json['Email'],
+      logoPath: json['logo_path'], // 👈 récupération du logo depuis l’API
+    );
+  }
+}
+
+// ------------------ Fonctions utilitaires ------------------
+
+// Récupérer infos entreprise
+Future<EntrepriseInfos> fetchEntreprise(int idEse) async {
+  final response = await http.post(
+    Uri.parse("https://riphin-salemanager.com/beni_newlook_API/AfficherInfos_Ese.php"),
+    headers: {"Content-Type": "application/json"},
+    body: jsonEncode({"idEse": idEse}),
+  );
+
+  final data = jsonDecode(response.body);
+  return EntrepriseInfos.fromJson(data['data']);
+}
+
+// Construire le PDF à partir des entrées
+Future<pw.Document> buildPdf(int idEse, List<Map<String, dynamic>> entrees) async {
+  // Charger Roboto 
+final fontRegular = pw.Font.ttf(await rootBundle.load("assets/fonts/Roboto-Regular.ttf"));
+final fontBold = pw.Font.ttf(await rootBundle.load("assets/fonts/Roboto-Bold.ttf"));
+
+  final entreprise = await fetchEntreprise(idEse);
+
+  final pdf = pw.Document();
+
+  // Charger le logo depuis l’URL
+  final logo = entreprise.logoPath.isNotEmpty ? await networkImage(entreprise.logoPath) : null;
+
+  pdf.addPage(
+    pw.MultiPage(
+      theme: pw.ThemeData.withFont(
+        base: fontRegular,
+        bold: fontBold,
+      ),
+      pageFormat: PdfPageFormat.a4,
+      build: (context) => [
+        // Entête entreprise avec logo
+        pw.Row(
+          mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+          children: [
+            pw.Column(
+              crossAxisAlignment: pw.CrossAxisAlignment.start,
+              children: [
+                pw.Text(entreprise.denomination,
+                    style: pw.TextStyle(fontSize: 20, fontWeight: pw.FontWeight.bold)),
+                pw.Text("Adresse: ${entreprise.adresse}"),
+                pw.Text("Téléphone: ${entreprise.telephone}"),
+                pw.Text("Email: ${entreprise.email}"),
+              ],
+            ),
+            if (logo != null)
+              pw.Container(
+                height: 60,
+                width: 60,
+                child: pw.Image(logo), // 👈 affichage du logo
+              ),
+          ],
+        ),
+        pw.SizedBox(height: 20),
+
+        // Titre centré et en gras
+        pw.Center(
+          child: pw.Text(
+            "Rapport des Entrées en Stock",
+            style: pw.TextStyle(
+              font: fontBold,
+              fontSize: 18,
+              fontWeight: pw.FontWeight.bold,
+            ),
+          ),
+        ),
+        pw.SizedBox(height: 10),
+
+        // Tableau des entrées
+        // ignore: deprecated_member_use
+        pw.Table.fromTextArray(
+          headers: [
+            "Produit",
+            "Quantité",
+            "PU",
+            "Date",
+            "Stock",
+            "Fournisseur",
+          ],
+          data: entrees.map((e) => [
+            e['designationProduit'] ?? "",
+            e['Quantite'].toString(),
+            e['prixUnitaire'].toString(),
+            e['DateEntree'] ?? "",
+            e['designationStock'] ?? "",
+            e['fournisseur_name'] ?? "",
+          ]).toList(),
+          headerStyle: pw.TextStyle(font: fontBold, fontSize: 10),
+          cellStyle: pw.TextStyle(font: fontRegular, fontSize: 9), // 👈 texte réduit
+          headerDecoration: pw.BoxDecoration(color: PdfColors.grey300),
+          cellAlignment: pw.Alignment.center,
+        ),
+      ],
+    ),
+  );
+
+  return pdf;
+}
+
+// ------------------ Page d’aperçu PDF ------------------
+class PdfPrevisualiserPage extends StatelessWidget {
+  final int idEse;
+  final List<Map<String, dynamic>> entrees;
+
+  const PdfPrevisualiserPage({super.key, required this.idEse, required this.entrees});
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text("Aperçu du rapport")),
+      body: FutureBuilder<pw.Document>(
+        future: buildPdf(idEse, entrees),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          } else if (snapshot.hasError) {
+            return Center(child: Text("Erreur: ${snapshot.error}"));
+          } else if (!snapshot.hasData) {
+            return const Center(child: Text("Aucun document généré"));
+          }
+
+          final pdf = snapshot.data!;
+          return PdfPreview(
+            build: (format) async => pdf.save(),
+            allowPrinting: true,   // 👈 permet d’imprimer après aperçu
+            allowSharing: true,    // 👈 permet de partager/exporter
+          );
+        },
       ),
     );
   }

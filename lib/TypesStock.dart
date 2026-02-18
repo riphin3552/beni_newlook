@@ -337,6 +337,7 @@ class _TypeStockState extends State<TypeStock> {
                         child: SingleChildScrollView(
                           scrollDirection: Axis.horizontal,
                           child: DataTable(
+                            // ignore: deprecated_member_use
                             headingRowColor: WidgetStateProperty.all(Color.fromARGB(255, 121, 169, 240).withOpacity(0.15)),
                             headingRowHeight: 56,
                             // ignore: deprecated_member_use

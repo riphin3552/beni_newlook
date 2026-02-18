@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart' show rootBundle;
+//import 'package:flutter/services.dart' show rootBundle;
 import 'package:http/http.dart' as http;
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
@@ -133,10 +133,11 @@ Future<pw.Document> buildPdf(int idEse) async {
         pw.SizedBox(height: 10),
 
         // Tableau stocks avec texte réduit
+        // ignore: deprecated_member_use
         pw.Table.fromTextArray(
           headers: [
             'ID Stock',
-            'Désignation',
+            'Désignation_stock',
             'Description',
             'Produit',
             'Quantité'
