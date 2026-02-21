@@ -6,6 +6,8 @@ import 'dart:convert';
 import 'package:beni_newlook/CategoryProduit.dart';
 import 'package:beni_newlook/EntreeStock.dart';
 import 'package:beni_newlook/IdentificationProduit.dart';
+import 'package:beni_newlook/Rapports/ListeProduits.dart';
+import 'package:beni_newlook/Rapports/SectionsPrincipales.dart';
 import 'package:beni_newlook/TypesStock.dart';
 import 'package:beni_newlook/pages/TypeProduit.dart';
 import 'package:beni_newlook/pages/Utilisateurs.dart';
@@ -648,6 +650,12 @@ class _StockMenuState extends State<StockMenu> {
                     color: Color(0xFF0097A7),
                     onTap: () {
                       // code
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => PdfPreviewPAGE(idEse: widget.identreprise),
+                        )
+                        );
                     },
                   ),
                   _buildSmartCard(
@@ -670,12 +678,26 @@ class _StockMenuState extends State<StockMenu> {
                   _buildSmartCard(
                     context,
                     index: 7,
-                    icon: Icons.unarchive,
-                    title: 'Mouvements',
-                    description: 'Historique complet',
+                    icon: Icons.bar_chart,
+                    title: 'SECTIONS',
+                    description: 'sections principales',
                     color: Color(0xFF5E35B1),
                     onTap: () {
                       // code
+                      showDialog(
+                        context: context,
+                        builder: (BuildContext context) {
+                          return Dialog(
+                            child: SizedBox(
+                              width: 650,
+                              height: 520,
+                              child: Sectionsprincipales(
+                                identreprise: widget.identreprise,
+                              ),
+                            ),
+                          );
+                        },
+                      );
                     },
                   ),
                 ],

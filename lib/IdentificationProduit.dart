@@ -206,8 +206,8 @@ Widget build(BuildContext context) {
     appBar: AppBar(
       title: Text('Identification des Produits'),
       backgroundColor: Color.fromARGB(255, 121, 169, 240),
-      elevation: 2,
-      centerTitle: true,
+      elevation: 2, // légère ombre pour l'appbar
+      centerTitle: true, 
     ),
     backgroundColor: const Color.fromARGB(255, 245, 248, 255),
     body: SingleChildScrollView(
