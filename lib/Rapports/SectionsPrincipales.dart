@@ -15,14 +15,40 @@ class _SectionsprincipalesState extends State<Sectionsprincipales> {
 
   final _formKey = GlobalKey<FormState>();
   final _designationSectionController = TextEditingController();
+  int? selectedStockeId;
+  List<Map<String, dynamic>> stocks = [];
   bool _isLoading = false;
   late Future<List<dynamic>> _sectionsFuture;
 
   @override
   void initState() {
     super.initState();
+    fetchStocks();
     _sectionsFuture = fetchSectionsPrincipales(widget.identreprise);
   }
+
+  // afficher stocks
+  Future<void> fetchStocks() async {
+    // logique pour récupérer les types de stock depuis l'API 
+      var url = Uri.parse("https://riphin-salemanager.com/beni_newlook_API/AfficherStocks.php");
+      var response = await http.post(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({
+          "entreprise": widget.identreprise,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        final List data = jsonDecode(response.body);
+        setState(() {
+          stocks=List<Map<String, dynamic>>.from(data);
+        });
+        //print(typesStock);
+      }
+   
+  }
+
 
 
   Future<void> addSectionPrincipale() async {
@@ -38,6 +64,7 @@ class _SectionsprincipalesState extends State<Sectionsprincipales> {
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           "description": _designationSectionController.text, // ⚠️ correspond au champ attendu par ton API PHP
+          
           "entreprise": widget.identreprise.toString(),
         }),
       ).timeout(const Duration(seconds: 10));
@@ -335,13 +362,15 @@ void _refreshSections() {
                                 ),
                                 columns: [
                                   DataColumn(label: SizedBox(width: idWidth, child: const Text("ID", style: TextStyle(color: Color.fromARGB(255, 121, 169, 240), fontWeight: FontWeight.bold)))),
-                                  DataColumn(label: SizedBox(width: designationWidth, child: const Text("Désignation", style: TextStyle(color: Color.fromARGB(255, 121, 169, 240), fontWeight: FontWeight.bold)))),
+                                  DataColumn(label: SizedBox(width: designationWidth, child: const Text("Section principale", style: TextStyle(color: Color.fromARGB(255, 121, 169, 240), fontWeight: FontWeight.bold)))),
+                                  
                                 ],
                                 rows: snapshot.data!.asMap().entries.map((entry) {
                                   int index = entry.key;
                                   var section = entry.value;
                                   var id = section['idSection'] ?? '';
                                   var designation = section['descptionSection'] ?? '';
+                                  
                                   return DataRow(
                                     color: WidgetStateProperty.all(index.isEven ? Colors.white : const Color.fromARGB(255, 245, 248, 255)),
                                     cells: [

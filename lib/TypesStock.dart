@@ -17,6 +17,8 @@ class _TypeStockState extends State<TypeStock> {
   final _designationStockController = TextEditingController();
   final _descriptionStockController = TextEditingController();
   List<Map<String, dynamic>> produits = [];
+  List<Map<String, dynamic>> sections = [];
+  int? selectedSection;
   int? selectedProduit;
   late Future<List<dynamic>> typeStocksFuture;
 
@@ -31,26 +33,65 @@ class _TypeStockState extends State<TypeStock> {
   void initState() {
     super.initState();
     fetchProduits();
+    fetchSections();
     typeStocksFuture = fetchTypeStocks(widget.identreprise);
   }
 
   
   // Fonction pour récupérer les produits depuis l'API
   Future<void> fetchProduits() async {
-    // logique pour récupérer les types de produits depuis l'API 
-    
-      var url = Uri.parse("https://riphin-salemanager.com/beni_newlook_API/GetNameProduit.php");
-      var response = await http.get(url);
+  var url = Uri.parse("https://riphin-salemanager.com/beni_newlook_API/GetNameProduit.php");
 
-      if (response.statusCode == 200) {
-        final List data = jsonDecode(response.body);
+  try {
+    var response = await http.post(
+      url,
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({"entreprise": widget.identreprise}), // ⚠️ si ton API filtre par entreprise
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+
+      if (data is List) {
         setState(() {
-          produits =List<Map<String, dynamic>>.from(data);
+          produits = List<Map<String, dynamic>>.from(data);
         });
-        //print(produits);
       }
-   
+    } else {
+      debugPrint("Erreur HTTP: ${response.statusCode}");
+    }
+  } catch (e) {
+    debugPrint("Erreur réseau ou parsing: $e");
   }
+}
+
+  // afficher les sections
+  Future<void> fetchSections() async {
+  var url = Uri.parse("https://riphin-salemanager.com/beni_newlook_API/AfficherSectionsPrincipales.php");
+
+  var response = await http.post(
+    url,
+    headers: {"Content-Type": "application/json"},
+    body: jsonEncode({"entreprise": widget.identreprise}),
+  );
+
+  if (response.statusCode == 200) {
+    try {
+      final data = jsonDecode(response.body);
+
+      if (data is List) {
+        setState(() {
+          sections = List<Map<String, dynamic>>.from(data);
+        });
+      }
+    } catch (e) {
+      // tu peux garder un petit log d'erreur si besoin
+      debugPrint("Erreur parsing JSON: $e");
+    }
+  } else {
+    debugPrint("Erreur HTTP: ${response.statusCode}");
+  }
+}
 
 
 
@@ -66,6 +107,7 @@ class _TypeStockState extends State<TypeStock> {
           "designation":_designationStockController.text,
           "description":_descriptionStockController.text,
           "produit":selectedProduit,
+          "section":selectedSection,
           "entreprise": widget.identreprise,
           "quantiteDisponible": quantite,
         })
@@ -279,6 +321,34 @@ class _TypeStockState extends State<TypeStock> {
                               validator: (value) => value == null ? 'Veuillez sélectionner un produit' : null,
                             ),
                             SizedBox(height: 28),
+                              DropdownButtonFormField<int>(
+                              decoration: InputDecoration(
+                                labelText: 'Section associée',
+                                labelStyle: TextStyle(color: Color.fromARGB(255, 121, 169, 240)),
+                                prefixIcon: Icon(Icons.category, color: Color.fromARGB(255, 121, 169, 240)),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                  borderSide: BorderSide(color: Color.fromARGB(255, 121, 169, 240)),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                  borderSide: BorderSide(color: Color.fromARGB(255, 121, 169, 240), width: 2),
+                                ),
+                              ),
+                              items: sections.map((section) {
+                                return DropdownMenuItem<int>(
+                                  value: section['idSection'],
+                                  child: Text(section['descptionSection']),
+                                );
+                              }).toList(),
+                              onChanged: (int? newValue) {
+                                setState(() {
+                                  selectedSection = newValue;
+                                });
+                              },
+                              validator: (value) => value == null ? 'Veuillez sélectionner une section' : null,
+                            ),
+                            SizedBox(height: 28),
                             ElevatedButton.icon(
                               onPressed: () {
                                 if (_formKey.currentState!.validate()) {
@@ -348,16 +418,16 @@ class _TypeStockState extends State<TypeStock> {
                               top: BorderSide(color: Colors.grey[300]!),
                             ),
                             columns: const [
-                             
-                              DataColumn(label: Text("Désignation", style: TextStyle(fontWeight: FontWeight.bold, color: Color.fromARGB(255, 121, 169, 240)))),
-                              DataColumn(label: Text("Description", style: TextStyle(fontWeight: FontWeight.bold, color: Color.fromARGB(255, 121, 169, 240)))),
+                              DataColumn(label: Text("Section", style: TextStyle(fontWeight: FontWeight.bold, color: Color.fromARGB(255, 121, 169, 240)))),
+                              DataColumn(label: Text("Désignation_stock", style: TextStyle(fontWeight: FontWeight.bold, color: Color.fromARGB(255, 121, 169, 240)))),
+                              DataColumn(label: Text("Description_stock", style: TextStyle(fontWeight: FontWeight.bold, color: Color.fromARGB(255, 121, 169, 240)))),
                               DataColumn(label: Text("Produit", style: TextStyle(fontWeight: FontWeight.bold, color: Color.fromARGB(255, 121, 169, 240)))),
                               DataColumn(label: Text("Qté disponible", style: TextStyle(fontWeight: FontWeight.bold, color: Color.fromARGB(255, 121, 169, 240)))),
                             ],
                             rows: types.map((type) {
                               return DataRow(
                                 cells: [
-                                
+                                  DataCell(Text(type['descptionSection'] ?? "")),
                                   DataCell(Text(type['designationStock'] ?? "")),
                                   DataCell(Text(type['Description_stock'] ?? "")),
                                   DataCell(Text(type['designationProduit'] ?? "")),

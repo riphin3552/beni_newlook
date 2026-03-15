@@ -6,6 +6,8 @@ import 'dart:convert';
 import 'package:beni_newlook/CategoryProduit.dart';
 import 'package:beni_newlook/EntreeStock.dart';
 import 'package:beni_newlook/IdentificationProduit.dart';
+import 'package:beni_newlook/PageCommande.dart';
+//import 'package:beni_newlook/PageCommande.dart';
 import 'package:beni_newlook/Rapports/ListeProduits.dart';
 import 'package:beni_newlook/Rapports/SectionsPrincipales.dart';
 import 'package:beni_newlook/TypesStock.dart';
@@ -123,7 +125,7 @@ class _MainMenuState extends State<MainMenu> {
       case 4:
         return const _Page(title: 'Facturation');
       case 5:
-        return const _Page(title: 'Commandes');
+        return CommandesMenu(titreMenuCommandes: 'Commande', identreprise: widget.identreprise); // contenu menu commandes
       case 6:
         return const _Page(title: 'Ressources humaines');
       case 7:
@@ -417,29 +419,6 @@ class StockMenu extends StatefulWidget {
   State<StockMenu> createState() => _StockMenuState();
 }
 
-
-// contenu menu rapports
-// class RapportPage extends StatelessWidget {
-//   final int idEse;
-
-//   const RapportPage({super.key, required this.idEse});
-
-//   @override
-//   Widget build(BuildContext context) {
-//     return Scaffold(
-//       appBar: AppBar(title: const Text("Rapport PDF")),
-//       body: Center(
-//         child: ElevatedButton(
-//           onPressed: () {
-//             // Appel de la fonction utilitaire pour générer le PDF
-//             buildPdf(idEse);
-//           },
-//           child: const Text("Générer le rapport"),
-//         ),
-//       ),
-//     );
-//   }
-// }
 
 
 
@@ -1065,6 +1044,7 @@ class _ParametresMenuState extends State<ParametresMenu> {
                       child: SizedBox(
                         width: double.infinity,
                         child: DataTable(
+                          // ignore: deprecated_member_use
                           headingRowColor: WidgetStateProperty.all(Color.fromARGB(255, 121, 169, 240).withOpacity(0.15)),
                           headingRowHeight: 56,
                           // ignore: deprecated_member_use
@@ -1121,6 +1101,84 @@ class _ParametresMenuState extends State<ParametresMenu> {
                     );
                 },
               ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+
+
+// contenu menu commandes
+
+class CommandesMenu extends StatefulWidget {
+  final String titreMenuCommandes;
+  final int identreprise;
+
+  const CommandesMenu({
+    super.key,
+    required this.titreMenuCommandes,
+    required this.identreprise,
+  });
+
+  @override
+  State<CommandesMenu> createState() => _CommandesMenuState();
+}
+
+class _CommandesMenuState extends State<CommandesMenu> {
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // 👇 Titre + IconButtons sur la même ligne
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                widget.titreMenuCommandes,
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
+              Row(
+                children: [
+                  FilledButton.icon(
+                    icon: const Icon(Icons.add_shopping_cart, size: 30, color: Colors.blue),
+                    label: const Text("Passez une commande"),
+                    onPressed: () {
+                      showDialog(
+                        context: context,
+                        builder: (BuildContext context) {
+                          return Dialog(
+                            child: SizedBox(
+                              width: 850,
+                              height: 650,
+                              child: CommandePage(idEntreprise: widget.identreprise),
+                            ),
+                          );
+                        },
+                      );
+                    },
+                  ),
+                  
+                ],
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 16),
+
+          Expanded(
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                border: Border.all(color: Theme.of(context).dividerColor),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Center(child: Text("Contenu des commandes...")),
             ),
           ),
         ],

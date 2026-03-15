@@ -359,6 +359,7 @@ Future<List<dynamic>> fetchCategoriesProduits(int entrepriseId) async {
                         child: SizedBox(
                           width: double.infinity,
                           child: DataTable(
+                            // ignore: deprecated_member_use
                             headingRowColor: WidgetStateProperty.all(Color.fromARGB(255, 121, 169, 240).withOpacity(0.15)),
                             headingRowHeight: 56,
                             // ignore: deprecated_member_use
