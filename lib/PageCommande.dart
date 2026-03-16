@@ -322,7 +322,7 @@ Future<void> addCommande() async {
       "entreprise": widget.idEntreprise,
       "client": selectedClient,
       "datecommande": _dateController.text,
-      "statutcommande": "Commandé",
+      "statutcommande": "Facturée",
       "prixtotal": total,
       "montantEntreeCaisse": total,
       "sourceMontant": selectedSection,
@@ -333,390 +333,507 @@ Future<void> addCommande() async {
   );
 
   if (response.statusCode == 200) {
-    print("Réponse API: ${response.body}");
-    print("le panier est: $details");
+    var data = json.decode(response.body);
+    if (data['success']) {
+      // ignore: use_build_context_synchronously
+      showDialog(context: context, 
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text("Succès"),
+          content: const Text("La commande a été enregistrée et facturée avec succès!"),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text("OK"),
+            ),
+          ],
+        );
+      });
+    } else {
+      // ignore: use_build_context_synchronously
+      showDialog(context: context, 
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text("Erreur"),
+          content: Text("Échec de l'enregistrement de la commande: ${data['message']}"),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text("OK"),
+            ),
+          ],
+        );
+      });
+    }
   } else {
-    print("Erreur HTTP: ${response.statusCode}");
+    // ignore: use_build_context_synchronously
+    showDialog(context: context, 
+    builder: (BuildContext context) {
+      return AlertDialog(
+        title: const Text("Erreur"),
+        content: Text("Erreur serveur: ${response.statusCode}"),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text("OK"),
+          ),
+        ],
+      );
+    });
   }
 }
 
 
 
 
+  InputDecoration _inputDecoration(
+      {required String labelText, required IconData icon}) {
+    final theme = Theme.of(context);
+    return InputDecoration(
+      labelText: labelText,
+      prefixIcon: Icon(icon, color: theme.colorScheme.primary),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12.0),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12.0),
+        borderSide: BorderSide(color: theme.colorScheme.primary, width: 2),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12.0),
+        borderSide: BorderSide(color: Colors.grey.shade400),
+      ),
+    );
+  }
+
+  Widget _buildSectionTitle(String title) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8.0),
+      child: Text(
+        title,
+        style: Theme.of(context)
+            .textTheme
+            .titleLarge
+            ?.copyWith(fontWeight: FontWeight.bold),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Commande"), centerTitle: true),
+      appBar: AppBar(title: const Text("Nouvelle Commande", style: TextStyle(color: Colors.white)), centerTitle: true,
+      backgroundColor:Color.fromARGB(255, 54, 67, 87)
+      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Form(
           key: _formKey,
           child: Column(
-  children: [
-    // Ligne 1 : Recherche client + Source commande
-    Row(
-      children: [
-        Expanded(
-          child: TypeAheadField<Map<String, dynamic>>(
-            controller: _clientController,
-            suggestionsCallback: (pattern) async {
-              if (pattern.isEmpty || pattern.length < 2) return [];
-              final response = await http.post(
-                Uri.parse('https://riphin-salemanager.com/beni_newlook_API/FetchANDaddClient.php'),
-                headers: {'Content-Type': 'application/json'},
-                body: jsonEncode({'client': pattern, 'entreprise': widget.idEntreprise}),
-              );
-              if (response.statusCode == 200) {
-                final json = jsonDecode(response.body);
-                if (json['client'] != null) {
-                  return [
-                    {
-                      "client_id": json['client']['id'],
-                      "client_name": json['client']['client_name'],
-                      "Id_Ese": json['client']['Id_Ese'],
-                    }
-                  ];
-                }
-              }
-              return [];
-            },
-            builder: (context, controller, focusNode) => TextFormField(
-              controller: _clientController,
-              focusNode: focusNode,
-              decoration: InputDecoration(
-                labelText: 'Rechercher client',
-                prefixIcon: const Icon(Icons.search, color: Colors.blue),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8.0),
-                  borderSide: const BorderSide(color: Colors.blue),
-                ),
-              ),
-              validator: (value) => value == null || value.isEmpty
-                  ? 'Veuillez entrer un fournisseur'
-                  : null,
-            ),
-            itemBuilder: (context, suggestion) => ListTile(
-              title: Text(suggestion['client_name']),
-            ),
-            onSelected: (suggestion) {
-              setState(() {
-                _clientController.text = suggestion['client_name'];
-                selectedClient = suggestion['client_id'];
-              });
-            },
-          ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: DropdownButtonFormField<int>(
-            decoration: InputDecoration(
-              labelText: 'Source commande',
-              prefixIcon: const Icon(Icons.inventory, color: Colors.blue),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-                borderSide: const BorderSide(color: Colors.blue),
-              ),
-            ),
-            items: sections.map((produit) {
-              return DropdownMenuItem<int>(
-                value: produit['idSection'],
-                child: Text(produit['descptionSection']),
-              );
-            }).toList(),
-            onChanged: (newValue) {
-              setState(() {
-                selectedSection = newValue;
-                
-              });
-              //declencher fetchStock
-                if(selectedSection!=null && selectedProduit!=null ){
-                  fetchProduitDansStock();
-                }
-              
-            },
-            validator: (value) =>
-                value == null ? 'Veuillez sélectionner une section' : null,
-          ),
-        ),
-      ],
-    ),
-    const SizedBox(height: 16),
-
-    // Ligne 2 : Choisir date + Recherche produit
-    Row(
-  children: [
-    Expanded(
-      child: TextFormField(
-        controller: _dateController,
-        decoration: InputDecoration(
-          labelText: 'Date commande',
-          labelStyle: const TextStyle(color: Color.fromARGB(255, 121, 169, 240)),
-          prefixIcon: const Icon(Icons.calendar_today, color: Color.fromARGB(255, 121, 169, 240)),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(8),
-            borderSide: const BorderSide(color: Color.fromARGB(255, 121, 169, 240)),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(8),
-            borderSide: const BorderSide(color: Color.fromARGB(255, 121, 169, 240), width: 2),
-          ),
-        ),
-        readOnly: true, // ⚠️ important pour éviter le clavier
-        onTap: () async {
-          DateTime? pickedDate = await showDatePicker(
-            context: context,
-            initialDate: DateTime.now(),
-            firstDate: DateTime(2000),
-            lastDate: DateTime(2101),
-          );
-          if (pickedDate != null) {
-            String formattedDate =
-                "${pickedDate.year}-${pickedDate.month.toString().padLeft(2, '0')}-${pickedDate.day.toString().padLeft(2, '0')}";
-            setState(() {
-              _dateController.text = formattedDate;
-            });
-          }
-        },
-        validator: (value) {
-          if (value == null || value.isEmpty) {
-            return 'Veuillez entrer une date';
-          }
-          try {
-            DateTime.parse(value);
-            return null;
-          } catch (e) {
-            return 'Format invalide (YYYY-MM-DD)';
-          }
-        },
-      ),
-    ),
-    const SizedBox(width: 12),
-    Expanded(
-      child: TypeAheadField<Map<String, dynamic>>(
-  controller: _produitController,
-  suggestionsCallback: _suggestionProduits,
-  builder: (context, controller, focusNode) => TextFormField(
-    controller: controller,
-    focusNode: focusNode,
-    decoration: InputDecoration(
-      labelText: "Rechercher produit",
-      prefixIcon: const Icon(Icons.search),
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(8.0),
-        borderSide: const BorderSide(color: Colors.blue),
-      ),
-    ),
-  ),
-  itemBuilder: (context, suggestion) => ListTile(
-    title: Text(suggestion["designationProduit"]),
-  ),
-  onSelected: (suggestion) async {
-    // Stocker l'Id du produit sélectionné
-    selectedProduit = int.parse(suggestion["id"].toString());
-
-    // Charger les détails depuis le stock
-    final produit = await fetchProduitDansStock();
-
-    setState(() {
-      produitDetails = produit; // ⚠️ Map<String, dynamic> avec les détails
-      _produitController.text = produit["designationProduit"];
-      prixController.text = produit["PrixVente"].toString();
-      stockController.text = produit["QuantiteDisponible"].toString();
-      uniteController.text = produit["uniteMesure"];
-      seuilController.text = produit["seuil_minimum"].toString();
-    });
-  },
-),
-    ),
-  ],
-),
-
-
-              
-              const SizedBox(height: 16),
-
-              // Détails produit
-              if (produitDetails != null)
-  Card(
-    elevation: 2,
-    shape: RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(12),
-    ),
-    child: Padding(
-      padding: const EdgeInsets.all(12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text("Détails produit", style: Theme.of(context).textTheme.titleMedium),
-          const SizedBox(height: 12),
-
-          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(
-                child: TextFormField(
-                  controller: prixController,
-                  keyboardType: TextInputType.number,
-                  decoration: InputDecoration(
-                    labelText: "Prix de vente",
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8.0),
-                      borderSide: const BorderSide(color: Colors.blue),
-                    ),
-                  ),
-                  onChanged: (val) {
-                    produitDetails!["PrixVente"] =
-                        int.tryParse(val) ?? produitDetails!["PrixVente"];
-                  },
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: TextFormField(
-                  controller: stockController,
-                  readOnly: true,
-                  decoration: InputDecoration(
-                    labelText: "Quantité disponible",
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8.0),
-                      borderSide: const BorderSide(color: Colors.blue),
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-
-          Row(
-            children: [
-              Expanded(
-                child: TextFormField(
-                  controller: uniteController,
-                  readOnly: true,
-                  decoration: InputDecoration(
-                    labelText: "Unité de mesure",
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8.0),
-                      borderSide: const BorderSide(color: Colors.blue),
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: TextFormField(
-                  controller: seuilController,
-                  readOnly: true,
-                  decoration: InputDecoration(
-                    labelText: "Seuil minimum",
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8.0),
-                      borderSide: const BorderSide(color: Colors.blue),
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    ),
-  ),
-              const SizedBox(height: 16),
-
-              // Quantité
-             Row(
-  children: [
-    Expanded(
-      child: TextFormField(
-        controller: _quantiteController,
-        keyboardType: TextInputType.number,
-        decoration: const InputDecoration(
-          labelText: "Quantité à commander",
-          prefixIcon: Icon(Icons.confirmation_num),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.all(Radius.circular(8.0)),
-            borderSide: BorderSide(color: Colors.blue),
-          ),
-        ),
-        validator: (value) =>
-            value == null || value.isEmpty ? "Veuillez entrer une quantité" : null,
-      ),
-    ),
-    const SizedBox(width: 12),
-    Expanded(
-      child: FilledButton.icon(
-        onPressed: () {
-          if (_formKey.currentState!.validate()) {
-            _ajouterAuPanier(produitDetails!);
-          }
-        },
-        icon: const Icon(Icons.add_shopping_cart),
-        label: const Text("Ajouter au panier"),
-        style: FilledButton.styleFrom(
-          padding: const EdgeInsets.symmetric(vertical: 16),
-        ),
-      ),
-    ),
-  ],
-),
-
-
-
-
+              _buildSectionTitle("1. Informations générales"),
+              _buildInformationsGeneralesCard(),
               const SizedBox(height: 24),
-
-              // Tableau panier
-              const Text("Détails commande", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-              const SizedBox(height: 8),
-              DataTable(
-                columns: const [
-                  
-                  DataColumn(label: Text("Produit")),
-                  DataColumn(label: Text("Quantité")),
-                  DataColumn(label: Text("Prix unitaire")),
-                  DataColumn(label: Text("Sous-total")),
-                ],
-                rows: panier.map((item) {
-                  return DataRow(cells: [
-                    
-                    DataCell(Text(item["produit"])),
-                    DataCell(Text(item["quantite"].toString())),
-                    DataCell(Text("${item["prixUnitaire"]}")),
-                    DataCell(Text("${item["quantite"] * item["prixUnitaire"]}")),
-                  ]);
-                }).toList(),
-              ),
-              const SizedBox(height: 16),
-
-              // Total
-              Text("Total à payer TTC : $total",
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
-              const SizedBox(height: 16),
-
-              // Valider commande
-              FilledButton(
-                onPressed: () {
-                  addCommande();
-
-                },
-                style: FilledButton.styleFrom(
-                  backgroundColor: Colors.green,
-                  padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
-                ),
-                child: const Text("Valider commande et Facturer"),
-              ),
+              _buildSectionTitle("2. Détails produit"),
+              _buildDetailsProduitCard(),
+              const SizedBox(height: 24),
+              _buildSectionTitle("3. Panier"),
+              _buildCartCard(),
+              const SizedBox(height: 24),
+              _buildTotalAndValidateSection(),
             ],
           ),
         ),
       ),
     );
   }
+
+  Widget _buildInformationsGeneralesCard() {
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: TypeAheadField<Map<String, dynamic>>(
+                    controller: _clientController,
+                    suggestionsCallback: (pattern) async {
+                      if (pattern.isEmpty || pattern.length < 2) return [];
+                      final response = await http.post(
+                        Uri.parse(
+                            'https://riphin-salemanager.com/beni_newlook_API/FetchANDaddClient.php'),
+                        headers: {'Content-Type': 'application/json'},
+                        body: jsonEncode({
+                          'client': pattern,
+                          'entreprise': widget.idEntreprise
+                        }),
+                      );
+                      if (response.statusCode == 200) {
+                        final json = jsonDecode(response.body);
+                        if (json['client'] != null) {
+                          return [
+                            {
+                              "client_id": json['client']['id'],
+                              "client_name": json['client']['client_name'],
+                              "Id_Ese": json['client']['Id_Ese'],
+                            }
+                          ];
+                        }
+                      }
+                      return [];
+                    },
+                    builder: (context, controller, focusNode) =>
+                        TextFormField(
+                      controller: _clientController,
+                      focusNode: focusNode,
+                      decoration: _inputDecoration(
+                          labelText: 'Rechercher client',
+                          icon: Icons.person_search),
+                      validator: (value) => value == null || value.isEmpty
+                          ? 'Veuillez entrer un client'
+                          : null,
+                    ),
+                    itemBuilder: (context, suggestion) =>
+                        ListTile(title: Text(suggestion['client_name'])),
+                    onSelected: (suggestion) {
+                      setState(() {
+                        _clientController.text = suggestion['client_name'];
+                        selectedClient = suggestion['client_id'];
+                      });
+                    },
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: DropdownButtonFormField<int>(
+                    decoration: _inputDecoration(
+                        labelText: 'Source commande', icon: Icons.inventory_2),
+                    items: sections.map((produit) {
+                      return DropdownMenuItem<int>(
+                        value: produit['idSection'],
+                        child: Text(produit['descptionSection']),
+                      );
+                    }).toList(),
+                    onChanged: (newValue) {
+                      setState(() {
+                        selectedSection = newValue;
+                      });
+                      if (selectedSection != null && selectedProduit != null) {
+                        fetchProduitDansStock();
+                      }
+                    },
+                    validator: (value) => value == null
+                        ? 'Veuillez sélectionner une section'
+                        : null,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            TextFormField(
+              controller: _dateController,
+              decoration: _inputDecoration(
+                  labelText: 'Date commande', icon: Icons.calendar_today),
+              readOnly: true,
+              onTap: () async {
+                DateTime? pickedDate = await showDatePicker(
+                  context: context,
+                  initialDate: DateTime.now(),
+                  firstDate: DateTime(2000),
+                  lastDate: DateTime(2101),
+                );
+                if (pickedDate != null) {
+                  String formattedDate =
+                      "${pickedDate.year}-${pickedDate.month.toString().padLeft(2, '0')}-${pickedDate.day.toString().padLeft(2, '0')}";
+                  setState(() {
+                    _dateController.text = formattedDate;
+                  });
+                }
+              },
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Veuillez entrer une date';
+                }
+                return null;
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDetailsProduitCard() {
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            TypeAheadField<Map<String, dynamic>>(
+              controller: _produitController,
+              suggestionsCallback: _suggestionProduits,
+              builder: (context, controller, focusNode) => TextFormField(
+                controller: controller,
+                focusNode: focusNode,
+                decoration: _inputDecoration(
+                    labelText: "Rechercher produit", icon: Icons.search),
+              ),
+              itemBuilder: (context, suggestion) =>
+                  ListTile(title: Text(suggestion["designationProduit"])),
+              onSelected: (suggestion) async {
+                selectedProduit = int.parse(suggestion["id"].toString());
+                final produit = await fetchProduitDansStock();
+                setState(() {
+                  produitDetails = produit;
+                  _produitController.text = produit["designationProduit"];
+                  prixController.text = produit["PrixVente"].toString();
+                  stockController.text =
+                      produit["QuantiteDisponible"].toString();
+                  uniteController.text = produit["uniteMesure"];
+                  seuilController.text = produit["seuil_minimum"].toString();
+                });
+              },
+            ),
+            if (produitDetails != null) ...[
+              const SizedBox(height: 16),
+              Text("Détails du produit",
+                  style: Theme.of(context).textTheme.titleMedium),
+              const SizedBox(height: 16),
+              Row(children: [
+                Expanded(
+                    child: TextFormField(
+                        controller: prixController,
+                        keyboardType: TextInputType.number,
+                        decoration: _inputDecoration(
+                            labelText: "Prix de vente",
+                            icon: Icons.attach_money),
+                        onChanged: (val) {
+                          produitDetails!["PrixVente"] = int.tryParse(val) ??
+                              produitDetails!["PrixVente"];
+                        })),
+                const SizedBox(width: 12),
+                Expanded(
+                    child: TextFormField(
+                        controller: stockController,
+                        readOnly: true,
+                        decoration: _inputDecoration(
+                            labelText: "Qte disponible",
+                            icon: Icons.inventory))),
+              ]),
+              const SizedBox(height: 12),
+              Row(children: [
+                Expanded(
+                    child: TextFormField(
+                        controller: uniteController,
+                        readOnly: true,
+                        decoration: _inputDecoration(
+                            labelText: "Unité", icon: Icons.square_foot))),
+                const SizedBox(width: 12),
+                Expanded(
+                    child: TextFormField(
+                        controller: seuilController,
+                        readOnly: true,
+                        decoration: _inputDecoration(
+                            labelText: "Seuil minimum",
+                            icon: Icons.warning_amber_rounded))),
+              ]),
+            ],
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Expanded(
+                  flex: 2,
+                  child: TextFormField(
+                    controller: _quantiteController,
+                    keyboardType: TextInputType.number,
+                    decoration: _inputDecoration(
+                        labelText: "Quantité a commander",
+                        icon: Icons.production_quantity_limits),
+                    validator: (value) => value == null || value.isEmpty
+                        ? "Veuillez entrer une quantité"
+                        : null,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  flex: 3,
+                  child: FilledButton.icon(
+                    onPressed: () {
+                      if (_formKey.currentState!.validate()) {
+                        if (produitDetails != null) {
+                          _ajouterAuPanier(produitDetails!);
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                                content: Text(
+                                    "Veuillez sélectionner un produit d'abord.")),
+                          );
+                        }
+                      }
+                    },
+                    icon: const Icon(Icons.add_shopping_cart),
+                    label: const Text("Ajouter au panier"),
+                    style: FilledButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12)),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCartCard() {
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          children: [
+            Row(
+              children: [
+                Expanded(
+                    flex: 4,
+                    child: Text("Produit",
+                        style: TextStyle(fontWeight: FontWeight.bold))),
+                Expanded(
+                    flex: 2,
+                    child: Text("Quantité",
+                        textAlign: TextAlign.center,
+                        style: TextStyle(fontWeight: FontWeight.bold))),
+                Expanded(
+                    flex: 3,
+                    child: Text("Prix Unitaire",
+                        textAlign: TextAlign.right,
+                        style: TextStyle(fontWeight: FontWeight.bold))),
+                Expanded(
+                    flex: 3,
+                    child: Text("Sous-total",
+                        textAlign: TextAlign.right,
+                        style: TextStyle(fontWeight: FontWeight.bold))),
+                SizedBox(width: 48), // Space for delete icon
+              ],
+            ),
+            Divider(),
+            if (panier.isEmpty)
+              const Padding(
+                padding: EdgeInsets.symmetric(vertical: 16.0),
+                child: Text("Le panier est vide."),
+              )
+            else
+              ListView.separated(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: panier.length,
+                separatorBuilder: (context, index) => const Divider(height: 1),
+                itemBuilder: (context, index) {
+                  final item = panier[index];
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 4.0),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Expanded(flex: 4, child: Text(item["produit"])),
+                        Expanded(
+                            flex: 2,
+                            child: Text(item["quantite"].toString(),
+                                textAlign: TextAlign.center)),
+                        Expanded(
+                            flex: 3,
+                            child: Text("${item["prixUnitaire"]}",
+                                textAlign: TextAlign.right)),
+                        Expanded(
+                            flex: 3,
+                            child: Text(
+                                "${item["quantite"] * item["prixUnitaire"]}",
+                                textAlign: TextAlign.right)),
+                        SizedBox(
+                          width: 48,
+                          child: IconButton(
+                            icon: const Icon(Icons.delete_outline,
+                                color: Colors.red),
+                            onPressed: () {
+                              setState(() {
+                                panier.removeAt(index);
+                              });
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTotalAndValidateSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text("Total à payer TTC : $total F",
+            textAlign: TextAlign.right,
+            style: Theme.of(context)
+                .textTheme
+                .titleMedium
+                ?.copyWith(fontWeight: FontWeight.bold)),
+        const SizedBox(height: 24),
+        FilledButton.icon(
+          icon: const Icon(Icons.check_circle_outline),
+          label: const Text("Valider la commande et Facturer"),
+          onPressed: () {
+            if (panier.isNotEmpty) {
+              addCommande();
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                    content: Text("Commande validée avec succès!"),
+                    backgroundColor: Colors.green),
+              );
+              setState(() {
+                panier.clear();
+                _clientController.clear();
+                _produitController.clear();
+                _dateController.text = "";
+                produitDetails = null;
+                selectedClient = null;
+                selectedSection = null;
+              });
+            } else {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                    content: Text("Le panier est vide. Impossible de valider."),
+                    backgroundColor: Colors.red),
+              );
+            }
+          },
+          style: FilledButton.styleFrom(
+            backgroundColor: Colors.green,
+            foregroundColor: Colors.white,
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          ),
+        ),
+      ],
+    );
+  }
 }
-
-
-
-
-
-
-

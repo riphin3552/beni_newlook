@@ -1128,6 +1128,37 @@ class CommandesMenu extends StatefulWidget {
 }
 
 class _CommandesMenuState extends State<CommandesMenu> {
+
+  late Future<List<Map<String, dynamic>>> _futureCommandes;
+
+  @override
+  void initState() {
+    super.initState();
+    _futureCommandes = fetchCommandes();
+  }
+
+
+  Future<List<Map<String, dynamic>>> fetchCommandes() async {
+    var url = Uri.parse("https://riphin-salemanager.com/beni_newlook_API/afficherCommandes.php");
+    var response = await http.post(
+      url,
+      headers: {'Content-Type': 'application/json'},
+      body: json.encode({"entreprise": widget.identreprise}),
+    );
+
+    if (response.statusCode == 200) {
+      var data = json.decode(response.body);
+      if (data['success']) {
+        return List<Map<String, dynamic>>.from(data['data']);
+      } else {
+        throw Exception(data['error'] ?? "Erreur inconnue");
+      }
+    } else {
+      throw Exception("Erreur serveur: ${response.statusCode}");
+    }
+  }
+
+
   @override
   Widget build(BuildContext context) {
     return Padding(
@@ -1178,7 +1209,75 @@ class _CommandesMenuState extends State<CommandesMenu> {
                 border: Border.all(color: Theme.of(context).dividerColor),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: const Center(child: Text("Contenu des commandes...")),
+              child:  FutureBuilder<List<Map<String, dynamic>>>(
+                future: _futureCommandes,
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator());
+                  } else if (snapshot.hasError) {
+                    return Center(child: Text("Erreur: ${snapshot.error}"));
+                  } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                    return const Center(child: Text("Aucune commande trouvée"));
+                  }
+
+                  final commandes = snapshot.data!;
+
+                  return Padding(
+                    padding: const EdgeInsets.all(12),
+                    child: SingleChildScrollView(
+                      scrollDirection: Axis.vertical,
+                      child: SizedBox(
+                        width: double.infinity,
+                        child: DataTable(
+                          // ignore: deprecated_member_use
+                          headingRowColor: WidgetStateProperty.all(Color.fromARGB(255, 121, 169, 240).withOpacity(0.15)),
+                          headingRowHeight: 56,
+                          // ignore: deprecated_member_use
+                          dataRowHeight: 56,
+                          columnSpacing: 16,
+                          border: TableBorder(
+                            horizontalInside: BorderSide(color: Colors.grey[300]!),
+                            bottom: BorderSide(color: Colors.grey[300]!),
+                            top: BorderSide(color: Colors.grey[300]!),
+                          ),
+                          columns: const [
+                            DataColumn(label: Text("ID", style: TextStyle(fontWeight: FontWeight.bold, color: Color.fromARGB(255, 121, 169, 240)))),
+                            DataColumn(label: Text("Date", style: TextStyle(fontWeight: FontWeight.bold, color: Color.fromARGB(255, 121, 169, 240)))),
+                            DataColumn(label: Text("Client", style: TextStyle(fontWeight: FontWeight.bold, color: Color.fromARGB(255, 121, 169, 240)))),
+                            DataColumn(label: Text("Produit", style: TextStyle(fontWeight: FontWeight.bold, color: Color.fromARGB(255, 121, 169, 240)))),
+                            DataColumn(label: Text("PU", style: TextStyle(fontWeight: FontWeight.bold, color: Color.fromARGB(255, 121, 169, 240)))),
+                            DataColumn(label: Text("Qté", style: TextStyle(fontWeight: FontWeight.bold, color: Color.fromARGB(255, 121, 169, 240)))),
+                            DataColumn(label: Text("Prix total", style: TextStyle(fontWeight: FontWeight.bold, color: Color.fromARGB(255, 121, 169, 240)))),
+                            DataColumn(label: Text("Statut", style: TextStyle(fontWeight: FontWeight.bold, color: Color.fromARGB(255, 121, 169, 240)))),
+                            DataColumn(label: Text("Section", style: TextStyle(fontWeight: FontWeight.bold, color: Color.fromARGB(255, 121, 169, 240)))),
+                          ],
+                          rows: commandes.asMap().entries.map((entry) {
+                            int index = entry.key;
+                            dynamic commande = entry.value;
+                            return DataRow(
+                              color: WidgetStateProperty.all(
+                                index.isEven ? Colors.white : Color.fromARGB(255, 245, 248, 255),
+                              ),
+                              cells: [
+                                  DataCell(Text(commande['Idcommande'].toString())),
+                                  DataCell(Text(commande['datecommande'] ?? '')),
+                                  DataCell(Text(commande['client_name'] ?? '')),
+                                  DataCell(Text(commande['designationProduit'] ?? '')),
+                                  DataCell(Text(commande['prixUnitiare'].toString())),
+                                  DataCell(Text(commande['Quantite'].toString())),
+                                  DataCell(Text(commande['totalPayer'].toString())),
+                                  DataCell(Text(commande['statut'] ?? '')),
+                                  DataCell(Text(commande['descptionSection'] ?? '')),
+
+                                ],
+                              );
+                            }).toList(),
+                          ),
+                        ),
+                      )
+                    );
+                },
+              ),
             ),
           ),
         ],
