@@ -9,10 +9,10 @@ import 'package:beni_newlook/IdentificationProduit.dart';
 import 'package:beni_newlook/PageCommande.dart';
 //import 'package:beni_newlook/PageCommande.dart';
 import 'package:beni_newlook/Rapports/ListeProduits.dart';
-import 'package:beni_newlook/Rapports/SectionsPrincipales.dart';
 import 'package:beni_newlook/TypesStock.dart';
 import 'package:beni_newlook/pages/TypeProduit.dart';
 import 'package:beni_newlook/pages/Utilisateurs.dart';
+import 'package:beni_newlook/pages/bridgeSection.dart';
 import 'package:beni_newlook/pages/entreprise.dart';
 import 'package:beni_newlook/pages/login.dart';
 import 'package:bitsdojo_window/bitsdojo_window.dart';
@@ -670,7 +670,7 @@ class _StockMenuState extends State<StockMenu> {
                             child: SizedBox(
                               width: 650,
                               height: 520,
-                              child: Sectionsprincipales(
+                              child: BridgeSection(
                                 identreprise: widget.identreprise,
                               ),
                             ),

@@ -1,71 +1,57 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
-class Sectionsprincipales extends StatefulWidget {
-  final int identreprise;
-  const Sectionsprincipales({super.key, required this.identreprise});
+class Sectionauxiliaire extends StatefulWidget {
+  final int iDentreprise;
+  const Sectionauxiliaire({super.key, required this.iDentreprise});
 
   @override
-  State<Sectionsprincipales> createState() => _SectionsprincipalesState();
+  State<Sectionauxiliaire> createState() => _SectionauxiliaireState();
 }
 
-class _SectionsprincipalesState extends State<Sectionsprincipales> {
-
+class _SectionauxiliaireState extends State<Sectionauxiliaire> {
   final _formKey = GlobalKey<FormState>();
-  final _designationSectionController = TextEditingController();
-  int? selectedStockeId;
-  List<Map<String, dynamic>> stocks = [];
+  final _designationSectionAuxiliaireController = TextEditingController();
   bool _isLoading = false;
-  late Future<List<dynamic>> _sectionsFuture;
-  
-  @override
+  late Future<List<dynamic>> _futureSectionAuxiliaire;
+
+
+
+@override
   void initState() {
     super.initState();
-    fetchStocks();
-    _sectionsFuture = fetchSectionsPrincipales(widget.identreprise);
-  }
-
-  // afficher stocks
-  Future<void> fetchStocks() async {
-    // logique pour récupérer les types de stock depuis l'API 
-      var url = Uri.parse("https://riphin-salemanager.com/beni_newlook_API/AfficherStocks.php");
-      var response = await http.post(
-        url,
-        headers: {'Content-Type': 'application/json'},
-        body: json.encode({
-          "entreprise": widget.identreprise,
-        }),
-      );
-
-      if (response.statusCode == 200) {
-        final List data = jsonDecode(response.body);
-        setState(() {
-          stocks=List<Map<String, dynamic>>.from(data);
-        });
-        //print(typesStock);
-      }
-   
+    _futureSectionAuxiliaire = fetchSectionsAuxiliaires(widget.iDentreprise);
   }
 
 
+  void resetForm() {
+    _designationSectionAuxiliaireController.clear();
+  }
 
-  Future<void> addSectionPrincipale() async {
+  void _refreshSections() {
+    setState(() {
+      _futureSectionAuxiliaire = fetchSectionsAuxiliaires(widget.iDentreprise);
+    });
+  }
+
+  Future<void> ajouterSectionAuxiliaire() async {
     setState(() {
       _isLoading = true;
     });
 
-    var url = Uri.parse("https://riphin-salemanager.com/beni_newlook_API/AddSectionPrincipales.php");
+    var url = Uri.parse("https://riphin-salemanager.com/beni_newlook_API/SectionsAuxiliaires.php");
 
     try {
       var response = await http.post(
         url,
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
-          "description": _designationSectionController.text, // ⚠️ correspond au champ attendu par ton API PHP
-          
-          "entreprise": widget.identreprise.toString(),
+          "descriptionsectauxi": _designationSectionAuxiliaireController.text,
+          "entreprise": widget.iDentreprise.toString(),
         }),
       ).timeout(const Duration(seconds: 10));
 
@@ -76,7 +62,8 @@ class _SectionsprincipalesState extends State<Sectionsprincipales> {
       }
 
       if (response.statusCode == 200) {
-        var data = json.decode(response.body);
+        var data = jsonDecode(response.body);
+
         if (data['success'] == true) {
           if (mounted) {
             showDialog(
@@ -84,12 +71,12 @@ class _SectionsprincipalesState extends State<Sectionsprincipales> {
               builder: (BuildContext context) {
                 return AlertDialog(
                   title: const Text("Succès"),
-                  content: Text(data['message']),
+                  content: Text(data['message']?.toString() ?? "Section ajoutée"),
                   actions: [
                     TextButton(
                       onPressed: () {
                         Navigator.of(context).pop();
-                        resetForm(); // réinitialiser le champ
+                        resetForm();
                         _refreshSections();
                       },
                       child: const Text("OK"),
@@ -101,17 +88,16 @@ class _SectionsprincipalesState extends State<Sectionsprincipales> {
           }
         } else {
           if (mounted) {
+            final errorMsg = data['message']?.toString() ?? data['error']?.toString() ?? "Erreur inconnue";
             showDialog(
               context: context,
               builder: (BuildContext context) {
                 return AlertDialog(
                   title: const Text("Erreur"),
-                  content: Text(data['message']),
+                  content: Text(errorMsg),
                   actions: [
                     TextButton(
-                      onPressed: () {
-                        Navigator.of(context).pop();
-                      },
+                      onPressed: () => Navigator.of(context).pop(),
                       child: const Text("OK"),
                     ),
                   ],
@@ -126,13 +112,11 @@ class _SectionsprincipalesState extends State<Sectionsprincipales> {
             context: context,
             builder: (BuildContext context) {
               return AlertDialog(
-                title: const Text("Erreur"),
-                content: const Text("Une erreur s'est produite lors de l'ajout de la section principale."),
+                title: const Text("Erreur serveur"),
+                content: Text("Code: ${response.statusCode}"),
                 actions: [
                   TextButton(
-                    onPressed: () {
-                      Navigator.of(context).pop();
-                    },
+                    onPressed: () => Navigator.of(context).pop(),
                     child: const Text("OK"),
                   ),
                 ],
@@ -154,9 +138,7 @@ class _SectionsprincipalesState extends State<Sectionsprincipales> {
               content: Text("Une erreur de connexion est survenue : $e"),
               actions: [
                 TextButton(
-                  onPressed: () {
-                    Navigator.of(context).pop();
-                  },
+                  onPressed: () => Navigator.of(context).pop(),
                   child: const Text("OK"),
                 ),
               ],
@@ -167,10 +149,9 @@ class _SectionsprincipalesState extends State<Sectionsprincipales> {
     }
   }
 
-
-  // afficher les sections principales existantes
-  Future<List<dynamic>> fetchSectionsPrincipales(int entrepriseId) async {
-  var url = Uri.parse("https://riphin-salemanager.com/beni_newlook_API/AfficherSectionsPrincipales.php");
+  // afficher section auxiliaires existantes
+  Future<List<dynamic>> fetchSectionsAuxiliaires(int entrepriseId) async {
+  var url = Uri.parse("https://riphin-salemanager.com/beni_newlook_API/AffcherSectionAuxi.php");
   var response = await http.post(
     url,
     headers: {'Content-Type': 'application/json'},
@@ -191,22 +172,13 @@ class _SectionsprincipalesState extends State<Sectionsprincipales> {
 }
 
 
-void resetForm(){
-  _designationSectionController.clear();  
-}
 
-void _refreshSections() {
-    setState(() {
-      _sectionsFuture = fetchSectionsPrincipales(widget.identreprise);
-    });
-  }
-  
-    
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Sections principales"),
+        title: const Text("Sections auxiliaires"),
         backgroundColor: const Color.fromARGB(255, 121, 169, 240),
         elevation: 2,
         centerTitle: true,
@@ -231,7 +203,7 @@ void _refreshSections() {
                       const Icon(Icons.add_box, color: Color.fromARGB(255, 121, 169, 240)),
                       const SizedBox(width: 12),
                       const Text(
-                        "Ajouter une Section",
+                        "Ajouter une Section Auxiliaire",
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 16,
@@ -248,7 +220,7 @@ void _refreshSections() {
                         child: Column(
                           children: [
                             TextFormField(
-                              controller: _designationSectionController,
+                              controller: _designationSectionAuxiliaireController,
                               decoration: InputDecoration(
                                 labelText: "Désignation",
                                 labelStyle: const TextStyle(color: Color.fromARGB(255, 121, 169, 240)),
@@ -266,11 +238,13 @@ void _refreshSections() {
                             ),
                             const SizedBox(height: 28),
                             ElevatedButton.icon(
-                              onPressed: _isLoading ? null : () {
-                                if (_formKey.currentState!.validate()) {
-                                  addSectionPrincipale();
-                                }
-                              },
+                              onPressed: _isLoading
+                                  ? null
+                                  : () {
+                                      if (_formKey.currentState!.validate()) {
+                                        ajouterSectionAuxiliaire();
+                                      }
+                                    },
                               icon: const Icon(Icons.check),
                               label: _isLoading
                                   ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
@@ -296,7 +270,7 @@ void _refreshSections() {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: FutureBuilder<List<dynamic>>(
-                future: _sectionsFuture,
+                future: _futureSectionAuxiliaire,
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
                     return const Center(child: CircularProgressIndicator(color: Color.fromARGB(255, 121, 169, 240)));
@@ -326,7 +300,7 @@ void _refreshSections() {
                             Icon(Icons.inbox_outlined, size: 48, color: Colors.grey[400]),
                             const SizedBox(height: 12),
                             Text(
-                              "Aucune section trouvée",
+                              "Aucune section auxiliaire trouvée",
                               style: TextStyle(fontSize: 14, color: Colors.grey[600]),
                             ),
                           ],
@@ -353,7 +327,7 @@ void _refreshSections() {
                                 headingRowHeight: 56,
                                 // ignore: deprecated_member_use
                                 dataRowHeight: 48,
-                                columnSpacing: 0, // Espacement géré manuellement par SizedBox
+                                columnSpacing: 0,
                                 horizontalMargin: 24,
                                 border: TableBorder(
                                   horizontalInside: BorderSide(color: Colors.grey[300]!),
@@ -362,15 +336,15 @@ void _refreshSections() {
                                 ),
                                 columns: [
                                   DataColumn(label: SizedBox(width: idWidth, child: const Text("ID", style: TextStyle(color: Color.fromARGB(255, 121, 169, 240), fontWeight: FontWeight.bold)))),
-                                  DataColumn(label: SizedBox(width: designationWidth, child: const Text("Section principale", style: TextStyle(color: Color.fromARGB(255, 121, 169, 240), fontWeight: FontWeight.bold)))),
-                                  
+                                  DataColumn(label: SizedBox(width: designationWidth, child: const Text("Section auxiliaire", style: TextStyle(color: Color.fromARGB(255, 121, 169, 240), fontWeight: FontWeight.bold)))),
                                 ],
                                 rows: snapshot.data!.asMap().entries.map((entry) {
                                   int index = entry.key;
                                   var section = entry.value;
-                                  var id = section['idSection'] ?? '';
-                                  var designation = section['descptionSection'] ?? '';
-                                  
+                                  // Adapting to likely keys based on SectionsPrincipales and add method
+                                  var id = section['idSectionAuxi'];
+                                  var designation = section['designationSectionAuxi'];
+
                                   return DataRow(
                                     color: WidgetStateProperty.all(index.isEven ? Colors.white : const Color.fromARGB(255, 245, 248, 255)),
                                     cells: [
