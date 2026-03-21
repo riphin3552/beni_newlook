@@ -1,6 +1,7 @@
 //modification au 14/05/2023
 import 'dart:convert';
 
+import 'package:beni_newlook/Rapports/Facture.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_typeahead/flutter_typeahead.dart';
 import 'package:http/http.dart' as http;
@@ -156,12 +157,25 @@ Future<Map<String, dynamic>> fetchProduitDansStock() async {
     }
 
     // Vérification du stock disponible
-    if (quantite > (produitDetails["QuantiteDisponible"] ?? 0)) {
+    // if (quantite > (produitDetails["QuantiteDisponible"] ?? 0)) {
+    //   ScaffoldMessenger.of(context).showSnackBar(
+    //     const SnackBar(content: Text("Quantité trop élevée par rapport au stock disponible")),
+    //   );
+    //   return;
+    // }
+
+    //verification de la quantité par rapport a l'unité de mesure
+    if (produitDetails["uniteMesure"] != "Plat" && quantite > produitDetails["QuantiteDisponible"].toInt()) {
+      
+      if (quantite > (produitDetails["QuantiteDisponible"] ?? 0)) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Quantité trop élevée par rapport au stock disponible")),
       );
       return;
     }
+      return;
+    }
+
 
     // Vérifier si le produit existe déjà dans le panier
     final index = panier.indexWhere((item) => item["id"] == produitDetails["IdProduit"]);
@@ -334,6 +348,7 @@ Future<void> addCommande() async {
 
   if (response.statusCode == 200) {
     var data = json.decode(response.body);
+    print("Response API: $data"); // Debug: afficher la réponse complète
     if (data['success']) {
       // ignore: use_build_context_synchronously
       showDialog(context: context, 
@@ -343,7 +358,48 @@ Future<void> addCommande() async {
           content: const Text("La commande a été enregistrée et facturée avec succès!"),
           actions: [
             TextButton(
-              onPressed: () => Navigator.of(context).pop(),
+              onPressed: () async {
+                Navigator.of(context).pop();
+                int? idcommande = data['idCommande']; // Récupérer l'ID de la commande créée
+                print("ID de la commande créée: $idcommande");
+                //recuperer la facture et les details de la commande pour les afficher dans la page de facture
+                final factureResponse=await http.post(
+                  Uri.parse("https://riphin-salemanager.com/beni_newlook_API/facture.php"),
+                  headers: {'Content-Type': 'application/json'},
+                  body: jsonEncode({
+                    "entreprise": widget.idEntreprise,
+                    "idCommande": idcommande}),
+                );
+                final factureData=jsonDecode(factureResponse.body);
+                if(factureData['success'] && factureData['data'] != null){
+                  // recupere infos entreprise
+                  final entrepriseResponse=await http.post(
+                    Uri.parse("https://riphin-salemanager.com/beni_newlook_API/AfficherInfos_Ese.php"),
+                    headers: {'Content-Type': 'application/json'},
+                    body: jsonEncode({"idEse": widget.idEntreprise}),
+                  );
+                  final entrepriseData=jsonDecode(entrepriseResponse.body)['data'];
+                    //generer le pdf thermiaque de la facture
+                    await generateThermalFacturePDF(entrepriseData, factureData['data']);
+                    print("FactureData utiliser pour le PDF: ${factureData['data']}"); // Debug: afficher les données de la facture
+                }else{
+                  //Gestion erreur si la fqcture non trouvable
+                  showDialog(context: context,
+                  builder: (BuildContext context) {
+                    return AlertDialog(
+                      title: const Text("Erreur"),
+                      content: Text("La facture de la commande n'a pas pu être récupérée: ${factureData['message']}"),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.of(context).pop(),
+                          child: const Text("OK"),
+                        ),
+                      ],
+                    );
+                  });
+                }
+                },
+                  
               child: const Text("OK"),
             ),
           ],
@@ -570,132 +626,154 @@ Future<void> addCommande() async {
   }
 
   Widget _buildDetailsProduitCard() {
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            TypeAheadField<Map<String, dynamic>>(
-              controller: _produitController,
-              suggestionsCallback: _suggestionProduits,
-              builder: (context, controller, focusNode) => TextFormField(
-                controller: controller,
-                focusNode: focusNode,
-                decoration: _inputDecoration(
-                    labelText: "Rechercher produit", icon: Icons.search),
+  return Card(
+    elevation: 2,
+    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+    child: Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          TypeAheadField<Map<String, dynamic>>(
+            key: UniqueKey(), // ✅ force rebuild après chaque commande
+            controller: _produitController,
+            suggestionsCallback: _suggestionProduits,
+            builder: (context, controller, focusNode) => TextFormField(
+              controller: controller,
+              focusNode: focusNode,
+              decoration: _inputDecoration(
+                labelText: "Rechercher produit",
+                icon: Icons.search,
               ),
-              itemBuilder: (context, suggestion) =>
-                  ListTile(title: Text(suggestion["designationProduit"])),
-              onSelected: (suggestion) async {
-                selectedProduit = int.parse(suggestion["id"].toString());
-                final produit = await fetchProduitDansStock();
-                setState(() {
-                  produitDetails = produit;
-                  _produitController.text = produit["designationProduit"];
-                  prixController.text = produit["PrixVente"].toString();
-                  stockController.text =
-                      produit["QuantiteDisponible"].toString();
-                  uniteController.text = produit["uniteMesure"];
-                  seuilController.text = produit["seuil_minimum"].toString();
-                });
-              },
             ),
-            if (produitDetails != null) ...[
-              const SizedBox(height: 16),
-              Text("Détails du produit",
-                  style: Theme.of(context).textTheme.titleMedium),
-              const SizedBox(height: 16),
-              Row(children: [
-                Expanded(
-                    child: TextFormField(
-                        controller: prixController,
-                        keyboardType: TextInputType.number,
-                        decoration: _inputDecoration(
-                            labelText: "Prix de vente",
-                            icon: Icons.attach_money),
-                        onChanged: (val) {
-                          produitDetails!["PrixVente"] = int.tryParse(val) ??
-                              produitDetails!["PrixVente"];
-                        })),
-                const SizedBox(width: 12),
-                Expanded(
-                    child: TextFormField(
-                        controller: stockController,
-                        readOnly: true,
-                        decoration: _inputDecoration(
-                            labelText: "Qte disponible",
-                            icon: Icons.inventory))),
-              ]),
-              const SizedBox(height: 12),
-              Row(children: [
-                Expanded(
-                    child: TextFormField(
-                        controller: uniteController,
-                        readOnly: true,
-                        decoration: _inputDecoration(
-                            labelText: "Unité", icon: Icons.square_foot))),
-                const SizedBox(width: 12),
-                Expanded(
-                    child: TextFormField(
-                        controller: seuilController,
-                        readOnly: true,
-                        decoration: _inputDecoration(
-                            labelText: "Seuil minimum",
-                            icon: Icons.warning_amber_rounded))),
-              ]),
-            ],
+            itemBuilder: (context, suggestion) =>
+                ListTile(title: Text(suggestion["designationProduit"])),
+            onSelected: (suggestion) async {
+              selectedProduit = int.parse(suggestion["id"].toString());
+              final produit = await fetchProduitDansStock();
+              setState(() {
+                produitDetails = produit;
+                _produitController.text = produit["designationProduit"];
+                prixController.text = produit["PrixVente"].toString();
+                stockController.text = produit["QuantiteDisponible"].toString();
+                uniteController.text = produit["uniteMesure"];
+                seuilController.text = produit["seuil_minimum"].toString();
+              });
+            },
+          ),
+
+          if (produitDetails != null) ...[
             const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(
-                  flex: 2,
-                  child: TextFormField(
-                    controller: _quantiteController,
-                    keyboardType: TextInputType.number,
-                    decoration: _inputDecoration(
-                        labelText: "Quantité a commander",
-                        icon: Icons.production_quantity_limits),
-                    validator: (value) => value == null || value.isEmpty
-                        ? "Veuillez entrer une quantité"
-                        : null,
+            Text("Détails du produit",
+                style: Theme.of(context).textTheme.titleMedium),
+            const SizedBox(height: 16),
+
+            Row(children: [
+              Expanded(
+                child: TextFormField(
+                  controller: prixController,
+                  keyboardType: TextInputType.number,
+                  decoration: _inputDecoration(
+                    labelText: "Prix de vente",
+                    icon: Icons.attach_money,
+                  ),
+                  onChanged: (val) {
+                    produitDetails!["PrixVente"] =
+                        int.tryParse(val) ?? produitDetails!["PrixVente"];
+                  },
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: TextFormField(
+                  controller: stockController,
+                  readOnly: true,
+                  decoration: _inputDecoration(
+                    labelText: "Qte disponible",
+                    icon: Icons.inventory,
                   ),
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  flex: 3,
-                  child: FilledButton.icon(
-                    onPressed: () {
-                      if (_formKey.currentState!.validate()) {
-                        if (produitDetails != null) {
-                          _ajouterAuPanier(produitDetails!);
-                        } else {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                                content: Text(
-                                    "Veuillez sélectionner un produit d'abord.")),
-                          );
-                        }
+              ),
+            ]),
+            const SizedBox(height: 12),
+
+            Row(children: [
+              Expanded(
+                child: TextFormField(
+                  controller: uniteController,
+                  readOnly: true,
+                  decoration: _inputDecoration(
+                    labelText: "Unité",
+                    icon: Icons.square_foot,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: TextFormField(
+                  controller: seuilController,
+                  readOnly: true,
+                  decoration: _inputDecoration(
+                    labelText: "Seuil minimum",
+                    icon: Icons.warning_amber_rounded,
+                  ),
+                ),
+              ),
+            ]),
+          ],
+
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                flex: 2,
+                child: TextFormField(
+                  controller: _quantiteController,
+                  keyboardType: TextInputType.number,
+                  decoration: _inputDecoration(
+                    labelText: "Quantité à commander",
+                    icon: Icons.production_quantity_limits,
+                  ),
+                  validator: (value) => value == null || value.isEmpty
+                      ? "Veuillez entrer une quantité"
+                      : null,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                flex: 3,
+                child: FilledButton.icon(
+                  onPressed: () {
+                    if (_formKey.currentState!.validate()) {
+                      if (produitDetails != null) {
+                        _ajouterAuPanier(produitDetails!);
+                      } else {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text("Veuillez sélectionner un produit d'abord."),
+                          ),
+                        );
                       }
-                    },
-                    icon: const Icon(Icons.add_shopping_cart),
-                    label: const Text("Ajouter au panier"),
-                    style: FilledButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12)),
+                    }
+                  },
+                  icon: const Icon(Icons.add_shopping_cart),
+                  label: const Text("Ajouter au panier"),
+                  style: FilledButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
                     ),
                   ),
                 ),
-              ],
-            ),
-          ],
-        ),
+              ),
+            ],
+          ),
+        ],
       ),
-    );
-  }
+    ),
+  );
+}
+
 
   Widget _buildCartCard() {
     return Card(
@@ -799,14 +877,8 @@ Future<void> addCommande() async {
         FilledButton.icon(
           icon: const Icon(Icons.check_circle_outline),
           label: const Text("Valider la commande et Facturer"),
-          onPressed: () {
-            if (panier.isNotEmpty) {
+          onPressed: ()  {
               addCommande();
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                    content: Text("Commande validée avec succès!"),
-                    backgroundColor: Colors.green),
-              );
               setState(() {
                 panier.clear();
                 _clientController.clear();
@@ -816,13 +888,7 @@ Future<void> addCommande() async {
                 selectedClient = null;
                 selectedSection = null;
               });
-            } else {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                    content: Text("Le panier est vide. Impossible de valider."),
-                    backgroundColor: Colors.red),
-              );
-            }
+            
           },
           style: FilledButton.styleFrom(
             backgroundColor: Colors.green,
