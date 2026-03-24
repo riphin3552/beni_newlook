@@ -348,7 +348,7 @@ Future<void> addCommande() async {
 
   if (response.statusCode == 200) {
     var data = json.decode(response.body);
-    print("Response API: $data"); // Debug: afficher la réponse complète
+    //print("Response API: $data"); // Debug: afficher la réponse complète
     if (data['success']) {
       // ignore: use_build_context_synchronously
       showDialog(context: context, 
@@ -361,7 +361,7 @@ Future<void> addCommande() async {
               onPressed: () async {
                 Navigator.of(context).pop();
                 int? idcommande = data['idCommande']; // Récupérer l'ID de la commande créée
-                print("ID de la commande créée: $idcommande");
+                //print("ID de la commande créée: $idcommande");
                 //recuperer la facture et les details de la commande pour les afficher dans la page de facture
                 final factureResponse=await http.post(
                   Uri.parse("https://riphin-salemanager.com/beni_newlook_API/facture.php"),
@@ -381,9 +381,10 @@ Future<void> addCommande() async {
                   final entrepriseData=jsonDecode(entrepriseResponse.body)['data'];
                     //generer le pdf thermiaque de la facture
                     await generateThermalFacturePDF(entrepriseData, factureData['data']);
-                    print("FactureData utiliser pour le PDF: ${factureData['data']}"); // Debug: afficher les données de la facture
+                    //print("FactureData utiliser pour le PDF: ${factureData['data']}"); // Debug: afficher les données de la facture
                 }else{
                   //Gestion erreur si la fqcture non trouvable
+                  // ignore: use_build_context_synchronously
                   showDialog(context: context,
                   builder: (BuildContext context) {
                     return AlertDialog(

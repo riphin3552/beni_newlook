@@ -10,6 +10,7 @@ import 'package:beni_newlook/PageCommande.dart';
 //import 'package:beni_newlook/PageCommande.dart';
 import 'package:beni_newlook/Rapports/ListeProduits.dart';
 import 'package:beni_newlook/TypesStock.dart';
+import 'package:beni_newlook/pages/MenuLogement.dart';
 import 'package:beni_newlook/pages/TypeProduit.dart';
 import 'package:beni_newlook/pages/Utilisateurs.dart';
 import 'package:beni_newlook/pages/bridgeSection.dart';
@@ -119,7 +120,7 @@ class _MainMenuState extends State<MainMenu> {
       case 1:
         return StockMenu(titreGestionStockMenu: 'Gestion du stock', identreprise: widget.identreprise); // contenu menu gestion stock
       case 2:
-        return const _Page(title: 'Logements');
+        return  MenuGestionlogement(titreMenuGestionLogement: "Logement", identreprise: widget.identreprise,); // contenu menu logement
       case 3:
         return const _Page(title: 'Caisse');
       case 4:
