@@ -89,7 +89,7 @@ class _MenuGestionlogementState extends State<MenuGestionlogement> {
                     context,
                     index: 0,
                     icon: Icons.bedroom_parent_rounded,
-                    title: 'Nvlle Chambre/Espace',
+                    title: 'Chambre/Espace',
                     description: 'Créer et gérer',
                     color: Color(0xFF1976D2),
                     onTap: () {
@@ -98,8 +98,8 @@ class _MenuGestionlogementState extends State<MenuGestionlogement> {
                         builder: (BuildContext context) {
                           return Dialog(
                             child: SizedBox(
-                              width: 650,
-                              height: 520,
+                              width: 670,
+                              height: 540,
                               child: Chambreespace(
                                 identreprise: widget.identreprise,
                               ),
@@ -137,7 +137,7 @@ class _MenuGestionlogementState extends State<MenuGestionlogement> {
                     context,
                     index: 2,
                     icon: Icons.bed_rounded,
-                    title: 'Chambre/Espace disponibles',
+                    title: 'C/E disponibles',
                     description: 'Prets à réserver',
                     color: Color(0xFFF57C00),
                     onTap: () {
@@ -161,7 +161,7 @@ class _MenuGestionlogementState extends State<MenuGestionlogement> {
                     context,
                     index: 3,
                     icon: Icons.list_alt_rounded,
-                    title: 'chambres/espaces occupés',
+                    title: 'C/E occupés',
                     description: 'En cours d\'occupation',
                     color: Color(0xFF7B1FA2),
                     onTap: () {
