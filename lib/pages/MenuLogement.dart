@@ -1,3 +1,4 @@
+import 'package:beni_newlook/pages/AjouterClient.dart';
 import 'package:beni_newlook/pages/ChambreEspace.dart';
 import 'package:flutter/material.dart';
 
@@ -112,32 +113,32 @@ class _MenuGestionlogementState extends State<MenuGestionlogement> {
                   _buildSmartCard(
                     context,
                     index: 1,
-                    icon: Icons.bookmark_add_rounded,
-                    title: 'Nouvelle réservation',
-                    description: 'En cours de réservation',
+                    icon: Icons.person_add_alt_1_rounded,
+                    title: 'Ajouter client',
+                    description: 'Créer un nouveau client',
                     color: Color(0xFF388E3C),
                     onTap: () {
-                      // showDialog(
-                      //   context: context,
-                      //   builder: (BuildContext context) {
-                      //     return Dialog(
-                      //       child: SizedBox(
-                      //         width: 650,
-                      //         height: 500,
-                      //         child: Categoryproduit(
-                      //           identreprise: widget.identreprise,
-                      //         ),
-                      //       ),
-                      //     );
-                      //   },
-                      // );
+                      showDialog(
+                        context: context,
+                        builder: (BuildContext context) {
+                          return Dialog(
+                            child: SizedBox(
+                              width: 650,
+                              height: 500,
+                              child: AjouterClient(
+                                identreprise: widget.identreprise,
+                              ),
+                            ),
+                          );
+                        },
+                      );
                     },
                   ),
                   _buildSmartCard(
                     context,
                     index: 2,
-                    icon: Icons.bed_rounded,
-                    title: 'C/E disponibles',
+                    icon: Icons.bookmark_add_rounded,
+                    title: 'Nouvelle réservation',
                     description: 'Prets à réserver',
                     color: Color(0xFFF57C00),
                     onTap: () {
@@ -160,7 +161,7 @@ class _MenuGestionlogementState extends State<MenuGestionlogement> {
                   _buildSmartCard(
                     context,
                     index: 3,
-                    icon: Icons.list_alt_rounded,
+                    icon: Icons.room_service_rounded,
                     title: 'C/E occupés',
                     description: 'En cours d\'occupation',
                     color: Color(0xFF7B1FA2),
@@ -185,9 +186,9 @@ class _MenuGestionlogementState extends State<MenuGestionlogement> {
                   _buildSmartCard(
                     context,
                     index: 4,
-                    icon: Icons.input,
-                    title: 'Liste des réservations',
-                    description: 'Toutes les réservations',
+                    icon: Icons.check_circle_outline_rounded,
+                    title: 'C/E disponibles',
+                    description: 'Prêts à être occupés',
                     color: Color(0xFFD32F2F),
                     onTap: () {
                       // code
@@ -211,8 +212,8 @@ class _MenuGestionlogementState extends State<MenuGestionlogement> {
                     context,
                     index: 5,
                     icon: Icons.inventory,
-                    title: 'Liste Produits',
-                    description: 'Tous vos produits',
+                    title: 'Liste des reservations',
+                    description: 'nos reservations',
                     color: Color(0xFF0097A7),
                     onTap: () {
                       // code
