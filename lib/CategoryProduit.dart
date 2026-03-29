@@ -26,9 +26,9 @@ class _CategoryproduitState extends State<Categoryproduit> {
   @override
   void initState() {
     super.initState();
-    fetchTypeProduits();
+    fetchTypeProduits(widget.identreprise);
     categoriesFuture = fetchCategoriesProduits(widget.identreprise);
-
+    //print("id entreprise dans category produit: ${widget.identreprise}");
   }
 
   void resetFields() {
@@ -39,11 +39,15 @@ class _CategoryproduitState extends State<Categoryproduit> {
 
   
 
-  Future<void> fetchTypeProduits() async {
+  Future<void> fetchTypeProduits(int entrepriseId) async {
     // logique pour récupérer les types de produits depuis l'API 
     
       var url = Uri.parse("https://riphin-salemanager.com/beni_newlook_API/Get_TypeProduit.php");
-      var response = await http.get(url);
+      var response = await http.post(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({"entreprise": entrepriseId}),
+  ).timeout(Duration(seconds: 10));
 
       if (response.statusCode == 200) {
         final List data = jsonDecode(response.body);
@@ -168,14 +172,16 @@ class _CategoryproduitState extends State<Categoryproduit> {
 
 
 // afficher les catégories de produits existantes
+
 Future<List<dynamic>> fetchCategoriesProduits(int entrepriseId) async {
+  
   var url = Uri.parse("https://riphin-salemanager.com/beni_newlook_API/AfficherCategoryProduit.php");
   var response = await http.post(
     url,
     headers: {'Content-Type': 'application/json'},
     body: json.encode({"entreprise": entrepriseId}),
   );
-
+  
   if (response.statusCode == 200) {
     var data = json.decode(response.body);
 

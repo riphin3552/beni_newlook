@@ -5,6 +5,7 @@ import 'dart:io';
 import 'dart:typed_data';
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
+import 'package:beni_newlook/pages/Utilisateurs.dart';
 import 'package:file_picker/file_picker.dart';
 
 class Entreprise extends StatefulWidget {
@@ -94,7 +95,16 @@ class _EntrepriseState extends State<Entreprise> {
               actions: [
                 TextButton(
                   onPressed: () {
-                    Navigator.of(context).pop();
+                    Navigator.of(context).pop(); // Ferme la boîte de dialogue
+                    // On récupère l'ID retourné par l'API (souvent sous la clé 'id')
+                    int enterpriseId = int.tryParse(data['data']['Id_Ese']?.toString() ?? '0') ?? 0;
+                    print("ID de l'entreprise créée: $enterpriseId"); // Pour le débogage
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => Utilisateurs(identreprise: enterpriseId),
+                      ),
+                    );
                   },
                   child: Text('OK', style: TextStyle(color: Color.fromARGB(255, 121, 169, 240))),
                 ),

@@ -43,14 +43,19 @@ class _IdentificationproduitState extends State<Identificationproduit> {
   Future <void> fetchCategoryProduits() async {
     // logique pour récupérer les catégories de produits depuis l'API 
       var url = Uri.parse("https://riphin-salemanager.com/beni_newlook_API/Get_CategoryProduit.php");
-      var response = await http.get(url);
+      var response = await http.post(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({"entreprise": widget.identreprise}),
+      ).timeout(Duration(seconds: 10));
 
       if (response.statusCode == 200) {
         final List data = jsonDecode(response.body);
         setState(() {
           categoryProduits=List<Map<String, dynamic>>.from(data);
         });
-        //print(categoryProduits);
+        print("id entreprise dans category produit: ${widget.identreprise}");
+        print(categoryProduits);
       }
   }
 

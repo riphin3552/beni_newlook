@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:beni_newlook/pages/login.dart';
 class Utilisateurs extends StatefulWidget {
   final int identreprise;
   const Utilisateurs({super.key, required this.identreprise});
@@ -52,7 +53,11 @@ class _UtilisateursState extends State<Utilisateurs> {
                 actions: [
                   TextButton(
                     onPressed: () {
-                      Navigator.of(context).pop();
+                      Navigator.pushAndRemoveUntil(
+                        context,
+                        MaterialPageRoute(builder: (context) => const Login()),
+                        (route) => false,
+                      );
                     },
                     child: Text('OK', style: TextStyle(color: Color.fromARGB(255, 121, 169, 240))),
                   ),
