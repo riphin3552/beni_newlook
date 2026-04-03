@@ -1,5 +1,7 @@
+import 'package:beni_newlook/ReservationChambreEspace.dart';
 import 'package:beni_newlook/pages/AjouterClient.dart';
 import 'package:beni_newlook/pages/ChambreEspace.dart';
+import 'package:beni_newlook/pages/facturationChambreEspace.dart';
 import 'package:flutter/material.dart';
 
 class MenuGestionlogement extends StatefulWidget {
@@ -100,7 +102,7 @@ class _MenuGestionlogementState extends State<MenuGestionlogement> {
                           return Dialog(
                             child: SizedBox(
                               width: 670,
-                              height: 540,
+                              height: 560,
                               child: Chambreespace(
                                 identreprise: widget.identreprise,
                               ),
@@ -142,20 +144,44 @@ class _MenuGestionlogementState extends State<MenuGestionlogement> {
                     description: 'Prets à réserver',
                     color: Color(0xFFF57C00),
                     onTap: () {
-                      // showDialog(
-                      //   context: context,
-                      //   builder: (BuildContext context) {
-                      //     return Dialog(
-                      //       child: SizedBox(
-                      //         width: 720,
-                      //         height: 580,
-                      //         child: Identificationproduit(
-                      //           identreprise: widget.identreprise,
-                      //         ),
-                      //       ),
-                      //     );
-                      //   },
-                      // );
+                      showDialog(
+                        context: context,
+                        builder: (BuildContext context) {
+                          return Dialog(
+                            child: SizedBox(
+                              width: 720,
+                              height: 580,
+                              child: Reservation(
+                                identreprise: widget.identreprise,
+                              ),
+                            ),
+                          );
+                        },
+                      );
+                    },
+                  ),
+                  _buildSmartCard(
+                    context,
+                    index: 6,
+                    icon: Icons.receipt_long_rounded,
+                    title: 'Facturation',
+                    description: 'Facturation de reservation',
+                    color: Color(0xFF00796B),
+                    onTap: () {
+                      showDialog(
+                        context: context,
+                        builder: (BuildContext context) {
+                          return Dialog(
+                            child: SizedBox(
+                              width: 720,
+                              height: 580,
+                              child: FacturationchambreEspace(
+                                identreprise: widget.identreprise,
+                              ),
+                            ),
+                          );
+                        },
+                      );
                     },
                   ),
                   _buildSmartCard(
@@ -225,23 +251,7 @@ class _MenuGestionlogementState extends State<MenuGestionlogement> {
                       //   );
                     },
                   ),
-                  _buildSmartCard(
-                    context,
-                    index: 6,
-                    icon: Icons.warehouse,
-                    title: 'Nos Stocks',
-                    description: 'Quantités actuelles',
-                    color: Color(0xFF00796B),
-                    onTap: () {
-                      // code
-                      // Navigator.push(
-                      //   context,
-                      //   MaterialPageRoute(
-                      //     builder: (context) => PdfPreviewPage(idEse: widget.identreprise),
-                      //   )
-                      //   );
-                    },
-                  ),
+                  
                   _buildSmartCard(
                     context,
                     index: 7,

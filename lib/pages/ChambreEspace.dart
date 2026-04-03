@@ -232,7 +232,7 @@ void resetForm() {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Espace de chambre'),
-        backgroundColor: const Color.fromARGB(255, 245, 248, 255),
+        backgroundColor: const Color.fromARGB(255, 121, 169, 240),
         elevation: 2,
         centerTitle: true,
       ),
