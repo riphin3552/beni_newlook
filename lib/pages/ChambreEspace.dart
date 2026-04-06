@@ -12,10 +12,9 @@ class Chambreespace extends StatefulWidget {
 }
 
 class _ChambreespaceState extends State<Chambreespace> {
-  List<Map<String, dynamic>> Etats = [];
   List<Map<String, dynamic>> typesEspace_chambre = [];
   bool _isLoading = false;
-  int? idEtatSelected;
+  String? statutChambreEspaceSelectedSelected;
   int? idTypeEspaceSelected;
   final _formKey = GlobalKey<FormState>();
   late Future<List<dynamic>> _futureChambres;
@@ -31,7 +30,7 @@ class _ChambreespaceState extends State<Chambreespace> {
     @override
   void initState() {
     super.initState();
-    fetchEtats();
+    //fetchEtats();
     fetchTypesEspace();
     _futureChambres = fetchChambresEspaces(widget.identreprise);
   }
@@ -42,6 +41,14 @@ class _ChambreespaceState extends State<Chambreespace> {
     });
   }
 
+  InputDecoration _inputDecoration({required String labelText, required IconData icon}) {
+    return InputDecoration(
+      labelText: labelText,
+      prefixIcon: Icon(icon, color: const Color.fromARGB(255, 121, 169, 240)),
+      border: const OutlineInputBorder(),
+    );
+  }
+
 void resetForm() {
     _formKey.currentState!.reset();
     _designationEspaceController.clear();
@@ -49,33 +56,33 @@ void resetForm() {
     _equipementEspaceController.clear();
     _capaciteEspaceController.clear();
     setState(() {
-      idEtatSelected = null;
+      statutChambreEspaceSelectedSelected = null;
       idTypeEspaceSelected = null;
     });
   }
 
 
    //afficher les etats de chambre
-  Future<void> fetchEtats() async {
+  // Future<void> fetchEtats() async {
      
-      var url = Uri.parse("https://riphin-salemanager.com/beni_newlook_API/AfficherEtats.php");
-      var response = await http.post(
-        url,
-        headers: {'Content-Type': 'application/json'},
-        body: json.encode({
-          "entreprise": widget.identreprise,
-        }),
-      );
+  //     var url = Uri.parse("https://riphin-salemanager.com/beni_newlook_API/AfficherEtats.php");
+  //     var response = await http.post(
+  //       url,
+  //       headers: {'Content-Type': 'application/json'},
+  //       body: json.encode({
+  //         "entreprise": widget.identreprise,
+  //       }),
+  //     );
 
-      if (response.statusCode == 200) {
-        final List data = jsonDecode(response.body); // Assume API returns a list of sections
-        setState(() {
-          Etats=List<Map<String, dynamic>>.from(data); // Convertir la liste dynamique en liste de maps
-        });
-        //print(produits);
-      }
+  //     if (response.statusCode == 200) {
+  //       final List data = jsonDecode(response.body); // Assume API returns a list of sections
+  //       setState(() {
+  //         Etats=List<Map<String, dynamic>>.from(data); // Convertir la liste dynamique en liste de maps
+  //       });
+  //       //print(produits);
+  //     }
    
-  }
+  // }
 
 
   //afficher les Sections auxiliaires de chambre ou types espace de chambre
@@ -104,7 +111,7 @@ void resetForm() {
   Future<void> addEspaceChambre() async {
     print(widget.identreprise);
     print(idTypeEspaceSelected);
-    print(idEtatSelected);
+    print(statutChambreEspaceSelectedSelected);
    try { 
     setState(() {
       _isLoading = true;
@@ -119,7 +126,7 @@ void resetForm() {
         "prixChambreEspace": _prixEspaceController.text,
         "equipementChambreEspace": _equipementEspaceController.text,
         "capaciteChambreEspace": _capaciteEspaceController.text,
-        "idEtatChambreEspace": idEtatSelected,
+        "statutChambreEspace": statutChambreEspaceSelectedSelected,
         "entreprise": widget.identreprise,
       }),
     );
@@ -206,7 +213,7 @@ void resetForm() {
   
   //Affichage liste des chambres/espaces
   Future<List<dynamic>> fetchChambresEspaces(int entrepriseId) async {
-  var url = Uri.parse("https://riphin-salemanager.com/beni_newlook_API/AfficherChambreEspace.php");
+  var url = Uri.parse("https://riphin-salemanager.com/beni_newlook_API/DisplayChambreEspace.php");
   var response = await http.post(
     url,
     headers: {'Content-Type': 'application/json'},
@@ -321,23 +328,11 @@ void resetForm() {
                               ),
                             ),
                             const SizedBox(height: 16),
-                            DropdownButtonFormField<int>(
-                              decoration: const InputDecoration(
-                                labelText: 'État de l\'espace',
-                                border: OutlineInputBorder(),
-                              ),
-                              value: idEtatSelected,
-                              onChanged: (value) {
-                                setState(() {
-                                  idEtatSelected = value;
-                                });
-                              },
-                              items: Etats.map((etat) {
-                                return DropdownMenuItem<int>(
-                                  value: etat['idEtat'],
-                                  child: Text(etat['libelle']),
-                                );
-                              }).toList(),
+                            DropdownButtonFormField<String>(
+                              value: statutChambreEspaceSelectedSelected,
+                              decoration: _inputDecoration(labelText: 'État de l\'espace', icon: Icons.info_outline),
+                              items: ["Disponible", "Occupé", "Maintenance"].map((String val) => DropdownMenuItem(value: val, child: Text(val))).toList(),
+                              onChanged: (val) => setState(() => statutChambreEspaceSelectedSelected = val),
                             ),
                             const SizedBox(height: 16),
                             TextFormField(
@@ -467,13 +462,13 @@ void resetForm() {
                                         Container(
                                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                                           decoration: BoxDecoration(
-                                            color: item['libelle'] == "Disponible" ? Colors.green.withOpacity(0.1) : Colors.orange.withOpacity(0.1),
+                                            color: item['statutChambreEspace'] == "Disponible" ? Colors.green.withOpacity(0.1) : Colors.orange.withOpacity(0.1),
                                             borderRadius: BorderRadius.circular(4),
                                           ),
                                           child: Text(
-                                            item['libelle']?.toString() ?? '',
+                                            item['statutChambreEspace']?.toString() ?? '',
                                             style: TextStyle(
-                                              color: item['libelle'] == "Disponible" ? Colors.green : Colors.orange,
+                                              color: item['statutChambreEspace'] == "Disponible" ? Colors.green : Colors.orange,
                                               fontWeight: FontWeight.bold,
                                               fontSize: 12,
                                             ),
