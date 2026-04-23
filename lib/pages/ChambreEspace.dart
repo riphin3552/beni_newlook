@@ -213,7 +213,7 @@ void resetForm() {
   
   //Affichage liste des chambres/espaces
   Future<List<dynamic>> fetchChambresEspaces(int entrepriseId) async {
-  var url = Uri.parse("https://riphin-salemanager.com/beni_newlook_API/DisplayChambreEspace.php");
+  var url = Uri.parse("https://riphin-salemanager.com/beni_newlook_API/afficheEspacesChambres.php");
   var response = await http.post(
     url,
     headers: {'Content-Type': 'application/json'},

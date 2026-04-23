@@ -267,6 +267,7 @@ class _FacturationchambreEspaceState extends State<FacturationchambreEspace> {
     }
   } catch (e) {
     showDialog(
+      // ignore: use_build_context_synchronously
       context: context,
       builder: (context) => AlertDialog(
         icon: const Icon(Icons.error, color: Colors.red, size: 48),

@@ -277,6 +277,7 @@ class _ReservationState extends State<Reservation> {
       return Future.error("Erreur de connexion: $e");
     }
   }
+  
 
   // Fetch clients from the API
   Future<List<Map<String, dynamic>>> fetchClients({
@@ -310,6 +311,47 @@ class _ReservationState extends State<Reservation> {
   }
 }
   
+//Actualiser les reservations chaque apres jour pour liberer les chambres et espaces automatiquement
+Future<Map<String, dynamic>> cloturerReservations() async {
+  const String url = "https://riphin-salemanager.com/beni_newlook_API/RefreshStatutChambreEspace.php";
+
+  try {
+    final response = await http.post(
+      Uri.parse(url),
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: jsonEncode({
+        "entreprise": widget.identreprise.toString(),
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      final Map<String, dynamic> data = jsonDecode(response.body);
+
+      if (data["success"] == true) {
+        print("✅ ${data["message"]}");
+        return data;
+      } else {
+        print("❌ Erreur API : ${data["error"]}");
+        return data;
+      }
+    } else {
+      print("❌ Erreur HTTP : ${response.statusCode}");
+      return {
+        "success": false,
+        "error": "Erreur HTTP ${response.statusCode}"
+      };
+    }
+  } catch (e) {
+    print("❌ Exception : $e");
+    return {
+      "success": false,
+      "error": "Erreur de connexion : $e"
+    };
+  }
+}
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -567,6 +609,38 @@ class _ReservationState extends State<Reservation> {
               ),
             ),
             const SizedBox(height: 24),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Align(
+                alignment: Alignment.centerRight,
+                child: ElevatedButton.icon(
+                  onPressed: _isLoading ? null : () async {
+                    setState(() => _isLoading = true);
+                    final result = await cloturerReservations();
+                    if (!mounted) return;
+                    setState(() => _isLoading = false);
+                    
+                    if (result['success'] == true) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text(result['message'] ?? "Mise à jour des statuts réussie")),
+                      );
+                      _refreshReservations();
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text("Erreur : ${result['error']}"), backgroundColor: Colors.red),
+                      );
+                    }
+                  },
+                  icon: const Icon(Icons.history_toggle_off),
+                  label: const Text("Clôturer les réservations"),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color.fromARGB(255, 121, 169, 240),
+                    foregroundColor: Colors.white,
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
             // --- Tableau des Réservations ---
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
