@@ -16,7 +16,7 @@ Future<void> generateThermalFacturePDF(
   final logoImage = pw.MemoryImage(logoResponse.bodyBytes);
 
   final details = (facture["detailsProduits"] ?? []) as List<dynamic>;
-  print("objects details: $details"); // Debug: afficher les détails de la facture
+  //print("objects details: $details"); // Debug: afficher les détails de la facture
   final totalTTC = details.fold(
     0.0,
     (sum, d) => sum + (num.tryParse(d["totalPayer"].toString()) ?? 0),

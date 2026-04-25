@@ -593,33 +593,7 @@ Future<void> addCommande() async {
               ],
             ),
             const SizedBox(height: 16),
-            TextFormField(
-              controller: _dateController,
-              decoration: _inputDecoration(
-                  labelText: 'Date commande', icon: Icons.calendar_today),
-              readOnly: true,
-              onTap: () async {
-                DateTime? pickedDate = await showDatePicker(
-                  context: context,
-                  initialDate: DateTime.now(),
-                  firstDate: DateTime(2000),
-                  lastDate: DateTime(2101),
-                );
-                if (pickedDate != null) {
-                  String formattedDate =
-                      "${pickedDate.year}-${pickedDate.month.toString().padLeft(2, '0')}-${pickedDate.day.toString().padLeft(2, '0')}";
-                  setState(() {
-                    _dateController.text = formattedDate;
-                  });
-                }
-              },
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Veuillez entrer une date';
-                }
-                return null;
-              },
-            ),
+            
           ],
         ),
       ),

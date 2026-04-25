@@ -500,6 +500,7 @@ class _FacturationchambreEspaceState extends State<FacturationchambreEspace> {
                             child: DataTable(
                               headingRowColor: WidgetStateProperty.all(const Color.fromARGB(255, 121, 169, 240).withOpacity(0.15)),
                               headingRowHeight: 56,
+                              // ignore: deprecated_member_use
                               dataRowHeight: 48,
                               horizontalMargin: 24,
                               border: TableBorder(
@@ -540,6 +541,7 @@ class _FacturationchambreEspaceState extends State<FacturationchambreEspace> {
                                       Container(
                                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                                         decoration: BoxDecoration(
+                                          // ignore: deprecated_member_use
                                           color: item['statutReservation'] == "Confirmée" ? Colors.green.withOpacity(0.1) : Colors.orange.withOpacity(0.1),
                                           borderRadius: BorderRadius.circular(4),
                                         ),
