@@ -1,8 +1,10 @@
 import 'dart:convert';
 
+import 'package:beni_newlook/Rapports/FactureAutresServices.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_typeahead/flutter_typeahead.dart';
 import 'package:http/http.dart' as http;
+//import 'package:shared_preferences/shared_preferences.dart';
 
 class FactureAutreServices extends StatefulWidget {
   final int idEntreprise;
@@ -129,9 +131,35 @@ Future<void> fetchSectionsauxriliaires(int entrepriseId) async {
                     content: const Text("La facture a été enregistrée avec succès."),
                     actions: [
                       TextButton(
-                        onPressed: () {
+                        onPressed: () async {
                           Navigator.of(context).pop();
-                          resetForm(); // Réinitialiser le formulaire après succès
+                          
+                          int? idFacture = data['idFacturationAutresServices'];
+
+                          // 1. Récupérer les détails de la facture spécifique
+                          final factureResponse = await http.post(
+                            Uri.parse("https://riphin-salemanager.com/beni_newlook_API/AfficherFacturationsautresService.php"),
+                            headers: {'Content-Type': 'application/json'},
+                            body: jsonEncode({
+                              "entreprise": widget.idEntreprise,
+                              "idFacturationAutresServices": idFacture
+                            }),
+                          );
+                          final List factureData = jsonDecode(factureResponse.body);
+
+                          // 2. Récupérer les informations de l'entreprise
+                          final entrepriseResponse = await http.post(
+                            Uri.parse("https://riphin-salemanager.com/beni_newlook_API/AfficherInfos_Ese.php"),
+                            headers: {'Content-Type': 'application/json'},
+                            body: jsonEncode({"idEse": widget.idEntreprise}),
+                          );
+                          final entrepriseData = jsonDecode(entrepriseResponse.body)['data'];
+
+                          if (factureData.isNotEmpty) {
+                            await generateThermalFacturePDF(entrepriseData, factureData[0]);
+                          }
+
+                          resetForm();
                           setState(() {
                             facturesAutresServicesFuture = fetchFacturationAutresServices(widget.idEntreprise);
                           });
