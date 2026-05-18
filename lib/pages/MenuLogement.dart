@@ -1,3 +1,6 @@
+import 'package:beni_newlook/Rapports/EspacesChambresDisponibles.dart';
+import 'package:beni_newlook/Rapports/EspacesChambresOccupes.dart';
+import 'package:beni_newlook/Rapports/EvoltionReservations.dart';
 import 'package:beni_newlook/ReservationChambreEspace.dart';
 import 'package:beni_newlook/pages/AjouterClient.dart';
 import 'package:beni_newlook/pages/ChambreEspace.dart';
@@ -192,22 +195,13 @@ class _MenuGestionlogementState extends State<MenuGestionlogement> {
                     description: 'En cours d\'occupation',
                     color: Color(0xFF7B1FA2),
                     onTap: () {
-                      // code
-                  //     showDialog(
-                  //       context: context,
-                  //       builder: (BuildContext context) {
-                  //         return Dialog(
-                  //           child: SizedBox(
-                  //             width: 650,
-                  //             height: 520,
-                  //             child: TypeStock(
-                  //               identreprise: widget.identreprise,
-                  //             ),
-                  //           ),
-                  //         );
-                  //   },
-                  // );
-                },
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => EspacesOccupesReportPage(idEse: widget.identreprise),
+                        ),
+                      );
+                    },
                   ),
                   _buildSmartCard(
                     context,
@@ -217,21 +211,12 @@ class _MenuGestionlogementState extends State<MenuGestionlogement> {
                     description: 'Prêts à être occupés',
                     color: Color(0xFFD32F2F),
                     onTap: () {
-                      // code
-                      // showDialog(
-                      //   context: context,
-                      //   builder: (BuildContext context) {
-                      //     return Dialog(
-                      //       child: SizedBox(
-                      //         width: 880,
-                      //         height: 600,
-                      //         child: Entreestock(
-                      //           identreprise: widget.identreprise,
-                      //         ),
-                      //       ),
-                      //     );
-                      //   },
-                      // );
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => EspacesDisponiblesReportPage(idEse: widget.identreprise),
+                        ),
+                      );
                     },
                   ),
                   _buildSmartCard(
@@ -242,13 +227,14 @@ class _MenuGestionlogementState extends State<MenuGestionlogement> {
                     description: 'nos reservations',
                     color: Color(0xFF0097A7),
                     onTap: () {
-                      // code
-                      // Navigator.push(
-                      //   context,
-                      //   MaterialPageRoute(
-                      //     builder: (context) => PdfPreviewPAGE(idEse: widget.identreprise),
-                      //   )
-                      //   );
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => EvolutionReservations(
+                            identreprise: widget.identreprise,
+                          ),
+                        ),
+                      );
                     },
                   ),
                   
@@ -256,8 +242,8 @@ class _MenuGestionlogementState extends State<MenuGestionlogement> {
                     context,
                     index: 7,
                     icon: Icons.bar_chart,
-                    title: 'SECTIONS',
-                    description: 'sections principales',
+                    title: 'STATISTIQUES',
+                    description: 'Statistiques de réservation',
                     color: Color(0xFF5E35B1),
                     onTap: () {
                       // code

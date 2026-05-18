@@ -349,6 +349,7 @@ Future<void> addCommande() async {
   if (response.statusCode == 200) {
     var data = json.decode(response.body);
     //print("Response API: $data"); // Debug: afficher la réponse complète
+    //print("datecommande envoyée: ${_dateController.text}"); // Debug: vérifier la date envoyée
     if (data['success']) {
       // ignore: use_build_context_synchronously
       showDialog(context: context, 
@@ -381,6 +382,7 @@ Future<void> addCommande() async {
                   final entrepriseData=jsonDecode(entrepriseResponse.body)['data'];
                     //generer le pdf thermiaque de la facture
                     await generateThermalFacturePDF(entrepriseData, factureData['data']);
+                    
                     //print("FactureData utiliser pour le PDF: ${factureData['data']}"); // Debug: afficher les données de la facture
                 }else{
                   //Gestion erreur si la fqcture non trouvable

@@ -64,17 +64,33 @@ Future<List<dynamic>> fetchFacturationAutresServices(int entrepriseId) async {
 
     // ⚠️ Ton API renvoie directement une liste
     if (data is List) {
-      return data;
+      return data.reversed.toList();
     } else {
       return [];
-      
     }
-    
   } else {
     throw Exception("Erreur serveur: ${response.statusCode}");
   }
 }
 
+  // Nouvelle méthode pour imprimer une facture existante
+  Future<void> _printFacture(Map<String, dynamic> facture) async {
+    try {
+      final entrepriseResponse = await http.post(
+        Uri.parse("https://riphin-salemanager.com/beni_newlook_API/AfficherInfos_Ese.php"),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({"idEse": widget.idEntreprise}),
+      );
+      final entrepriseData = jsonDecode(entrepriseResponse.body)['data'];
+
+      await generateThermalFacturePDF(entrepriseData, facture);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Erreur lors de l'impression: $e"), backgroundColor: Colors.red),
+      );
+    }
+  }
 
 //afficher autres services
 Future<void> fetchSectionsauxriliaires(int entrepriseId) async {
@@ -155,8 +171,15 @@ Future<void> fetchSectionsauxriliaires(int entrepriseId) async {
                           );
                           final entrepriseData = jsonDecode(entrepriseResponse.body)['data'];
 
-                          if (factureData.isNotEmpty) {
-                            await generateThermalFacturePDF(entrepriseData, factureData[0]);
+                          // Rechercher la facture spécifique qui vient d'être ajoutée via son ID
+                          // Si l'ID n'est pas trouvé pour une raison quelconque, on prend la dernière de la liste (la plus récente)
+                          final recentFacture = factureData.firstWhere(
+                            (f) => f['idFacturationAutresServices'].toString() == idFacture.toString(),
+                            orElse: () => factureData.isNotEmpty ? factureData.last : null,
+                          );
+
+                          if (recentFacture != null) {
+                            await generateThermalFacturePDF(entrepriseData, recentFacture);
                           }
 
                           resetForm();
@@ -452,6 +475,7 @@ Future<void> fetchSectionsauxriliaires(int entrepriseId) async {
                           DataColumn(label: Text("Client", style: TextStyle(fontWeight: FontWeight.bold, color: Color.fromARGB(255, 121, 169, 240)))),
                           DataColumn(label: Text("Service", style: TextStyle(fontWeight: FontWeight.bold, color: Color.fromARGB(255, 121, 169, 240)))),
                           DataColumn(label: Text("Montant", style: TextStyle(fontWeight: FontWeight.bold, color: Color.fromARGB(255, 121, 169, 240)))),
+                          DataColumn(label: Text("Action", style: TextStyle(fontWeight: FontWeight.bold, color: Color.fromARGB(255, 121, 169, 240)))),
                         ],
                         rows: factures.map((facture) {
                           return DataRow(
@@ -461,6 +485,13 @@ Future<void> fetchSectionsauxriliaires(int entrepriseId) async {
                               DataCell(Text(facture['client_name'] ?? "")),
                               DataCell(Text(facture['designationSectionAuxi'] ?? "")),
                               DataCell(Text("${facture['MontantPayer'] ?? "0"} \$")),
+                              DataCell(
+                                IconButton(
+                                  icon: const Icon(Icons.print, color: Color.fromARGB(255, 121, 169, 240)),
+                                  tooltip: "Réimprimer la facture",
+                                  onPressed: () => _printFacture(Map<String, dynamic>.from(facture)),
+                                ),
+                              ),
                             ],
                           );
                         }).toList(),

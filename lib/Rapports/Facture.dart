@@ -9,6 +9,15 @@ Future<void> generateThermalFacturePDF(
     Map<String, dynamic> entreprise,
     Map<String, dynamic> facture,
 ) async {
+  final pdf = await buildFactureDocument(entreprise, facture);
+  final docName = 'facture_${facture["IdFacture"] ?? DateTime.now().millisecondsSinceEpoch}';
+  await Printing.layoutPdf(onLayout: (PdfPageFormat format) async => pdf.save(), name: docName);
+}
+
+Future<pw.Document> buildFactureDocument(
+    Map<String, dynamic> entreprise,
+    Map<String, dynamic> facture,
+) async {
   final pdf = pw.Document();
 
   // Charger le logo
@@ -85,6 +94,8 @@ Future<void> generateThermalFacturePDF(
             pw.SizedBox(height: 20),
 
             pw.Center(
+
+              
               child: pw.Text(
                 "Une marchandise vendue ne peut ni être remise ni échangée",
                 style: pw.TextStyle(fontSize: 9, fontStyle: pw.FontStyle.italic),
@@ -97,6 +108,5 @@ Future<void> generateThermalFacturePDF(
     ),
   );
 
-  // ✅ Aperçu avant impression
-  await Printing.sharePdf(bytes: await pdf.save(), filename: 'facture.pdf');
+  return pdf;
 }

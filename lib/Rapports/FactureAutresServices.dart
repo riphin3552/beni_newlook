@@ -1,19 +1,56 @@
+import 'package:flutter/material.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
-import 'package:http/http.dart' as http;
-// ignore: unused_import
-import 'dart:convert';
+
+/// Page d'aperçu pour les factures de services auxiliaires
+class FactureAutresServicesPreviewPage extends StatelessWidget {
+  final Map<String, dynamic> entreprise;
+  final Map<String, dynamic> facture;
+
+  const FactureAutresServicesPreviewPage({
+    super.key,
+    required this.entreprise,
+    required this.facture,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text("Aperçu Facture Service"),
+        backgroundColor: const Color.fromARGB(255, 121, 169, 240),
+      ),
+      body: PdfPreview(
+        build: (format) async {
+          final pdf = await buildAutresServicesDocument(entreprise, facture);
+          return pdf.save();
+        },
+        allowPrinting: true,
+        allowSharing: true,
+        initialPageFormat: const PdfPageFormat(80 * PdfPageFormat.mm, double.infinity),
+      ),
+    );
+  }
+}
 
 Future<void> generateThermalFacturePDF(
     Map<String, dynamic> entreprise,
     Map<String, dynamic> factureServices,
 ) async {
+  final pdf = await buildAutresServicesDocument(entreprise, factureServices);
+  final docName = 'facture_${factureServices["idFacturationAutresServices"] ?? DateTime.now().millisecondsSinceEpoch}';
+  await Printing.layoutPdf(onLayout: (PdfPageFormat format) async => pdf.save(), name: docName);
+}
+
+Future<pw.Document> buildAutresServicesDocument(
+    Map<String, dynamic> entreprise,
+    Map<String, dynamic> factureServices,
+) async {
   final pdf = pw.Document();
 
-  // Charger le logo
-  final logoResponse = await http.get(Uri.parse(entreprise["logo_path"]));
-  final logoImage = pw.MemoryImage(logoResponse.bodyBytes);
+  // Chargement optimisé du logo
+  final logoImage = await networkImage(entreprise["logo_path"]);
 
   final montant = num.tryParse(factureServices["MontantPayer"].toString()) ?? 0.0;
   final designation = factureServices["designationSectionAuxi"] ?? "";
@@ -88,7 +125,5 @@ Future<void> generateThermalFacturePDF(
       },
     ),
   );
-
-  // ✅ Aperçu avant impression
-  await Printing.sharePdf(bytes: await pdf.save(), filename: 'facture.pdf');
+  return pdf;
 }

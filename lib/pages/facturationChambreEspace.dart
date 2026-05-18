@@ -361,7 +361,7 @@ class _FacturationchambreEspaceState extends State<FacturationchambreEspace> {
                               const SizedBox(width: 16),
                               Expanded(
                                 child: DropdownButtonFormField<String>(
-                                  value: _selectedTypePaiement,
+                                  initialValue: _selectedTypePaiement,
                                   decoration: _inputDecoration(labelText: 'Type de paiement', icon: Icons.payment),
                                   items: ["Total", "Acompte"].map((String val) => DropdownMenuItem(value: val, child: Text(val))).toList(),
                                   onChanged: (val) {

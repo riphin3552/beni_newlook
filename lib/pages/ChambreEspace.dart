@@ -109,9 +109,9 @@ void resetForm() {
 
   // Ajouter un espace de chambre
   Future<void> addEspaceChambre() async {
-    print(widget.identreprise);
-    print(idTypeEspaceSelected);
-    print(statutChambreEspaceSelectedSelected);
+    //print(widget.identreprise);
+    //print(idTypeEspaceSelected);
+    //print(statutChambreEspaceSelectedSelected);
    try { 
     setState(() {
       _isLoading = true;
@@ -283,7 +283,7 @@ void resetForm() {
                                 labelText: 'Type d\'espace ou chambre',
                                 border: OutlineInputBorder(),
                               ),
-                              value: idTypeEspaceSelected,
+                              initialValue: idTypeEspaceSelected,
                               onChanged: (value) {
                                 setState(() {
                                   idTypeEspaceSelected = value;
@@ -329,7 +329,7 @@ void resetForm() {
                             ),
                             const SizedBox(height: 16),
                             DropdownButtonFormField<String>(
-                              value: statutChambreEspaceSelectedSelected,
+                              initialValue: statutChambreEspaceSelectedSelected,
                               decoration: _inputDecoration(labelText: 'État de l\'espace', icon: Icons.info_outline),
                               items: ["Disponible", "Occupé", "Maintenance"].map((String val) => DropdownMenuItem(value: val, child: Text(val))).toList(),
                               onChanged: (val) => setState(() => statutChambreEspaceSelectedSelected = val),

@@ -142,7 +142,7 @@ class _MenufacturationState extends State<Menufacturation> {
                           builder: (BuildContext context) {
                             return Dialog(
                               child: SizedBox(
-                                width: 650,
+                                width: 680,
                                 height: 500,
                                 child: FactureAutreServices(
                                   idEntreprise: widget.idEntreprise,
