@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:beni_newlook/pages/chambreEspaceHors_service.dart';
 
 class Chambreespace extends StatefulWidget {
   final int identreprise;
@@ -331,7 +332,7 @@ void resetForm() {
                             DropdownButtonFormField<String>(
                               initialValue: statutChambreEspaceSelectedSelected,
                               decoration: _inputDecoration(labelText: 'État de l\'espace', icon: Icons.info_outline),
-                              items: ["Disponible", "Occupé", "Maintenance"].map((String val) => DropdownMenuItem(value: val, child: Text(val))).toList(),
+                              items: ["Disponible", "Occupé", "Maintenance", "Bloquée"].map((String val) => DropdownMenuItem(value: val, child: Text(val))).toList(),
                               onChanged: (val) => setState(() => statutChambreEspaceSelectedSelected = val),
                             ),
                             const SizedBox(height: 16),
@@ -376,6 +377,31 @@ void resetForm() {
               ),
             ),
             const SizedBox(height: 24),
+            // Bouton "Mettre hors service" déplacé ici
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: Align(
+                alignment: Alignment.centerRight,
+                child: TextButton.icon(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => ChambreespacehorsService(
+                          identreprise: widget.identreprise,
+                        ),
+                      ),
+                    );
+                  },
+                  icon: const Icon(Icons.build_circle_outlined, color: Colors.white),
+                  label: const Text("Mettre hors service",
+                      style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                  style: TextButton.styleFrom(
+                    backgroundColor: Colors.redAccent.withOpacity(0.3),
+                  ),
+                ),
+              ),
+            ),
             const SizedBox(height: 32),
             // --- Tableau des chambres et espaces ---
             Padding(

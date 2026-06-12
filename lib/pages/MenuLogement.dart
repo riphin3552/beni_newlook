@@ -4,6 +4,7 @@ import 'package:beni_newlook/Rapports/EvoltionReservations.dart';
 import 'package:beni_newlook/ReservationChambreEspace.dart';
 import 'package:beni_newlook/pages/AjouterClient.dart';
 import 'package:beni_newlook/pages/ChambreEspace.dart';
+import 'package:beni_newlook/pages/bridgeStatistiqueschambreEsapce.dart';
 import 'package:beni_newlook/pages/facturationChambreEspace.dart';
 import 'package:flutter/material.dart';
 
@@ -86,185 +87,192 @@ class _MenuGestionlogementState extends State<MenuGestionlogement> {
             child: SingleChildScrollView(
               child: SizedBox(
                 width: double.infinity,
-                child: Wrap(
-                  spacing: 24,
-                  runSpacing: 24,
-                  alignment: WrapAlignment.start,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                  _buildSmartCard(
-                    context,
-                    index: 0,
-                    icon: Icons.bedroom_parent_rounded,
-                    title: 'Chambre/Espace',
-                    description: 'Créer et gérer',
-                    color: Color(0xFF1976D2),
-                    onTap: () {
-                      showDialog(
-                        context: context,
-                        builder: (BuildContext context) {
-                          return Dialog(
-                            child: SizedBox(
-                              width: 670,
-                              height: 560,
-                              child: Chambreespace(
-                                identreprise: widget.identreprise,
-                              ),
-                            ),
-                          );
-                        },
-                      );
-                    },
-                  ),
-                  _buildSmartCard(
-                    context,
-                    index: 1,
-                    icon: Icons.person_add_alt_1_rounded,
-                    title: 'Ajouter client',
-                    description: 'Créer un nouveau client',
-                    color: Color(0xFF388E3C),
-                    onTap: () {
-                      showDialog(
-                        context: context,
-                        builder: (BuildContext context) {
-                          return Dialog(
-                            child: SizedBox(
-                              width: 650,
-                              height: 500,
-                              child: AjouterClient(
-                                identreprise: widget.identreprise,
-                              ),
-                            ),
-                          );
-                        },
-                      );
-                    },
-                  ),
-                  _buildSmartCard(
-                    context,
-                    index: 2,
-                    icon: Icons.bookmark_add_rounded,
-                    title: 'Nouvelle réservation',
-                    description: 'Prets à réserver',
-                    color: Color(0xFFF57C00),
-                    onTap: () {
-                      showDialog(
-                        context: context,
-                        builder: (BuildContext context) {
-                          return Dialog(
-                            child: SizedBox(
-                              width: 720,
-                              height: 580,
-                              child: Reservation(
-                                identreprise: widget.identreprise,
-                              ),
-                            ),
-                          );
-                        },
-                      );
-                    },
-                  ),
-                  _buildSmartCard(
-                    context,
-                    index: 6,
-                    icon: Icons.receipt_long_rounded,
-                    title: 'Facturation',
-                    description: 'Facturation de reservation',
-                    color: Color(0xFF00796B),
-                    onTap: () {
-                      showDialog(
-                        context: context,
-                        builder: (BuildContext context) {
-                          return Dialog(
-                            child: SizedBox(
-                              width: 720,
-                              height: 580,
-                              child: FacturationchambreEspace(
-                                identreprise: widget.identreprise,
-                              ),
-                            ),
-                          );
-                        },
-                      );
-                    },
-                  ),
-                  _buildSmartCard(
-                    context,
-                    index: 3,
-                    icon: Icons.room_service_rounded,
-                    title: 'C/E occupés',
-                    description: 'En cours d\'occupation',
-                    color: Color(0xFF7B1FA2),
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => EspacesOccupesReportPage(idEse: widget.identreprise),
+                    // Première ligne : Gestion et Opérations
+                    Wrap(
+                      spacing: 24,
+                      runSpacing: 24,
+                      alignment: WrapAlignment.start,
+                      children: [
+                        _buildSmartCard(
+                          context,
+                          index: 0,
+                          icon: Icons.bedroom_parent_rounded,
+                          title: 'Chambre/Espace',
+                          description: 'Créer et gérer',
+                          color: const Color(0xFF1976D2),
+                          onTap: () {
+                            showDialog(
+                              context: context,
+                              builder: (BuildContext context) {
+                                return Dialog(
+                                  child: SizedBox(
+                                    width: 670,
+                                    height: 560,
+                                    child: Chambreespace(
+                                      identreprise: widget.identreprise,
+                                    ),
+                                  ),
+                                );
+                              },
+                            );
+                          },
                         ),
-                      );
-                    },
-                  ),
-                  _buildSmartCard(
-                    context,
-                    index: 4,
-                    icon: Icons.check_circle_outline_rounded,
-                    title: 'C/E disponibles',
-                    description: 'Prêts à être occupés',
-                    color: Color(0xFFD32F2F),
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => EspacesDisponiblesReportPage(idEse: widget.identreprise),
+                        _buildSmartCard(
+                          context,
+                          index: 1,
+                          icon: Icons.person_add_alt_1_rounded,
+                          title: 'Ajouter client',
+                          description: 'Créer un nouveau client',
+                          color: const Color(0xFF388E3C),
+                          onTap: () {
+                            showDialog(
+                              context: context,
+                              builder: (BuildContext context) {
+                                return Dialog(
+                                  child: SizedBox(
+                                    width: 650,
+                                    height: 500,
+                                    child: AjouterClient(
+                                      identreprise: widget.identreprise,
+                                    ),
+                                  ),
+                                );
+                              },
+                            );
+                          },
                         ),
-                      );
-                    },
-                  ),
-                  _buildSmartCard(
-                    context,
-                    index: 5,
-                    icon: Icons.inventory,
-                    title: 'Liste des reservations',
-                    description: 'nos reservations',
-                    color: Color(0xFF0097A7),
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => EvolutionReservations(
-                            identreprise: widget.identreprise,
-                          ),
+                        _buildSmartCard(
+                          context,
+                          index: 2,
+                          icon: Icons.bookmark_add_rounded,
+                          title: 'Nouvelle réservation',
+                          description: 'Prets à réserver',
+                          color: const Color(0xFFF57C00),
+                          onTap: () {
+                            showDialog(
+                              context: context,
+                              builder: (BuildContext context) {
+                                return Dialog(
+                                  child: SizedBox(
+                                    width: 720,
+                                    height: 580,
+                                    child: Reservation(
+                                      identreprise: widget.identreprise,
+                                    ),
+                                  ),
+                                );
+                              },
+                            );
+                          },
                         ),
-                      );
-                    },
-                  ),
-                  
-                  _buildSmartCard(
-                    context,
-                    index: 7,
-                    icon: Icons.bar_chart,
-                    title: 'STATISTIQUES',
-                    description: 'Statistiques de réservation',
-                    color: Color(0xFF5E35B1),
-                    onTap: () {
-                      // code
-                      // showDialog(
-                      //   context: context,
-                      //   builder: (BuildContext context) {
-                      //     return Dialog(
-                      //       child: SizedBox(
-                      //         width: 650,
-                      //         height: 520,
-                      //         child: BridgeSection(
-                      //           identreprise: widget.identreprise,
-                      //         ),
-                      //       ),
-                      //     );
-                      //   },
-                      // );
-                    },
-                  ),
-                ],
-              ),
+                        _buildSmartCard(
+                          context,
+                          index: 6,
+                          icon: Icons.receipt_long_rounded,
+                          title: 'Facturation',
+                          description: 'Facturation de reservation',
+                          color: const Color(0xFF00796B),
+                          onTap: () {
+                            showDialog(
+                              context: context,
+                              builder: (BuildContext context) {
+                                return Dialog(
+                                  child: SizedBox(
+                                    width: 720,
+                                    height: 580,
+                                    child: FacturationchambreEspace(
+                                      identreprise: widget.identreprise,
+                                    ),
+                                  ),
+                                );
+                              },
+                            );
+                          },
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 32),
+                    // Deuxième ligne : Rapports et Statistiques
+                    Wrap(
+                      spacing: 24,
+                      runSpacing: 24,
+                      alignment: WrapAlignment.start,
+                      children: [
+                        _buildSmartCard(
+                          context,
+                          index: 3,
+                          icon: Icons.room_service_rounded,
+                          title: 'C/E occupés',
+                          description: 'En cours d\'occupation',
+                          color: const Color(0xFF7B1FA2),
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => EspacesOccupesReportPage(idEse: widget.identreprise),
+                              ),
+                            );
+                          },
+                        ),
+                        _buildSmartCard(
+                          context,
+                          index: 4,
+                          icon: Icons.check_circle_outline_rounded,
+                          title: 'C/E disponibles',
+                          description: 'Prêts à être occupés',
+                          color: const Color(0xFFD32F2F),
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => EspacesDisponiblesReportPage(idEse: widget.identreprise),
+                              ),
+                            );
+                          },
+                        ),
+                        _buildSmartCard(
+                          context,
+                          index: 5,
+                          icon: Icons.inventory,
+                          title: 'Liste des reservations',
+                          description: 'nos reservations',
+                          color: const Color(0xFF0097A7),
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => EvolutionReservations(
+                                  identreprise: widget.identreprise,
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                        _buildSmartCard(
+                          context,
+                          index: 7,
+                          icon: Icons.bar_chart,
+                          title: 'STATISTIQUES',
+                          description: 'Statistiques de réservation',
+                          color: const Color(0xFF5E35B1),
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => BridgeStatistiques(
+                                  identreprise: widget.identreprise,
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
             ),
           ),

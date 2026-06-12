@@ -1,6 +1,7 @@
 import 'package:beni_newlook/PageCommande.dart';
 import 'package:beni_newlook/pages/facturationAutreServices.dart';
 import 'package:beni_newlook/pages/facturationChambreEspace.dart';
+import 'package:beni_newlook/pages/factureslogement_date.dart';
 import 'package:flutter/material.dart';
 
 class Menufacturation extends StatefulWidget {
@@ -156,12 +157,24 @@ class _MenufacturationState extends State<Menufacturation> {
                     _buildSmartCard(
                       context,
                       index: 3,
-                      icon: Icons.account_balance_rounded,
-                      title: 'Facture globale',
+                      icon: Icons.receipt_long_rounded,
+                      title: 'Facture logement',
                       description: 'Synthèse de facturation globale',
                       color: const Color(0xFF7B1FA2),
                       onTap: () {
                         // Action for Global Billing
+                        showDialog(
+                          context: context,
+                          builder: (BuildContext context) {
+                            return Dialog(
+                              child: SizedBox(
+                                width: 800,
+                                height: 600,
+                                child: FacturesLogement_date(identreprise: widget.idEntreprise),
+                                ),
+                              );
+                          },
+                        );
                       },
                     ),
                   ],

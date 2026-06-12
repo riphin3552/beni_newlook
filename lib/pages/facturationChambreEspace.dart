@@ -1,5 +1,7 @@
 import 'dart:convert';
 
+import 'package:beni_newlook/Rapports/EvoltionReservations.dart';
+import 'package:beni_newlook/pages/factureslogement_date.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
@@ -132,7 +134,8 @@ class _FacturationchambreEspaceState extends State<FacturationchambreEspace> {
           actions: [
             TextButton(
               onPressed: () {
-                Navigator.pop(context);
+                //Navigator.pop(context);
+                Navigator.push(context, MaterialPageRoute(builder: (context) => FacturesLogement_date(identreprise: widget.identreprise)));
                 _formKey.currentState!.reset();
                 setState(() {
                   _selectedReservationId = null;
@@ -229,7 +232,8 @@ class _FacturationchambreEspaceState extends State<FacturationchambreEspace> {
               actions: [
                 TextButton(
                   onPressed: () {
-                    Navigator.pop(context);
+                    //Navigator.pop(context);
+                    Navigator.push(context, MaterialPageRoute(builder: (context) => FacturesLogement_date(identreprise: widget.identreprise)));
                     _formKey.currentState!.reset();
                     setState(() {
                       _selectedReservationId = null;

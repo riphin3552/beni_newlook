@@ -3,29 +3,29 @@ import 'package:beni_newlook/Rapports/Facturelogement.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
-class EvolutionReservations extends StatefulWidget {
+class FacturesLogement_date extends StatefulWidget {
   final int identreprise;
-  const EvolutionReservations({super.key, required this.identreprise});
+  const FacturesLogement_date({super.key, required this.identreprise});
 
   @override
-  State<EvolutionReservations> createState() => _EvolutionReservationsState();
+  State<FacturesLogement_date> createState() => _FacturesLogement_dateState();
 }
 
-class _EvolutionReservationsState extends State<EvolutionReservations> {
+class _FacturesLogement_dateState extends State<FacturesLogement_date> {
   final TextEditingController _dateDebutController = TextEditingController();
   final TextEditingController _dateFinController = TextEditingController();
-  List<dynamic> _reservations = [];
+  List<dynamic> _factures = [];
   bool _isLoading = false;
 
   // Fonction pour récupérer les données de l'API
-  Future<void> _fetchReservations() async {
+  Future<void> _fetchFactures() async {
     if (_dateDebutController.text.isEmpty || _dateFinController.text.isEmpty) return;
 
     setState(() => _isLoading = true);
 
     try {
       final response = await http.post(
-        Uri.parse("https://riphin-salemanager.com/beni_newlook_API/ReservationsPar_DateEntree.php"),
+        Uri.parse("https://riphin-salemanager.com/beni_newlook_API/facturesLogement.php"),
         headers: {"Content-Type": "application/json"},
         body: jsonEncode({
           "entreprise": widget.identreprise,
@@ -38,7 +38,7 @@ class _EvolutionReservationsState extends State<EvolutionReservations> {
         final data = jsonDecode(response.body);
         setState(() {
           // On s'attend à recevoir une liste directement ou via une clé 'data'
-          _reservations = data is List ? data : (data['data'] ?? []);
+          _factures = data is List ? data : (data['data'] ?? []);
         });
       }
     } catch (e) {
@@ -66,7 +66,7 @@ class _EvolutionReservationsState extends State<EvolutionReservations> {
       });
       // Le filtrage est automatique dès que les deux dates sont sélectionnées
       if (_dateDebutController.text.isNotEmpty && _dateFinController.text.isNotEmpty) {
-        _fetchReservations();
+        _fetchFactures();
       }
     }
   }
@@ -95,7 +95,7 @@ class _EvolutionReservationsState extends State<EvolutionReservations> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Évolution des Réservations"),
+        title: const Text("Évolution des Factures de Logement"),
         backgroundColor: const Color.fromARGB(255, 121, 169, 240),
         centerTitle: true,
       ),
@@ -144,7 +144,7 @@ class _EvolutionReservationsState extends State<EvolutionReservations> {
             Expanded(
               child: _isLoading
                   ? const Center(child: CircularProgressIndicator())
-                  : _reservations.isEmpty
+                  : _factures.isEmpty
                       ? const Center(child: Text("Sélectionnez une période pour afficher les données"))
                       : Card(
                           elevation: 4,
@@ -155,27 +155,35 @@ class _EvolutionReservationsState extends State<EvolutionReservations> {
                               child: DataTable(
                                 headingRowColor: WidgetStateProperty.all(const Color.fromARGB(255, 121, 169, 240).withOpacity(0.15)),
                                 columns: const [
-                                  DataColumn(label: Text("ID_Reservation", style: TextStyle(fontWeight: FontWeight.bold))),
-                                  DataColumn(label: Text("Date Reservation", style: TextStyle(fontWeight: FontWeight.bold))),
+                                  DataColumn(label: Text("ID_Facture", style: TextStyle(fontWeight: FontWeight.bold))),
+                                  DataColumn(label: Text("Date Facture ", style: TextStyle(fontWeight: FontWeight.bold))),
                                   DataColumn(label: Text("Client", style: TextStyle(fontWeight: FontWeight.bold))),
                                   DataColumn(label: Text("Chambre/Espace", style: TextStyle(fontWeight: FontWeight.bold))),
                                   DataColumn(label: Text("Arrivée", style: TextStyle(fontWeight: FontWeight.bold))),
                                   DataColumn(label: Text("Départ", style: TextStyle(fontWeight: FontWeight.bold))),
-                                  DataColumn(label: Text("Jours", style: TextStyle(fontWeight: FontWeight.bold))),
+                                  //DataColumn(label: Text("Jours", style: TextStyle(fontWeight: FontWeight.bold))),
                                   DataColumn(label: Text("Total", style: TextStyle(fontWeight: FontWeight.bold))),
-                                  DataColumn(label: Text("Statut", style: TextStyle(fontWeight: FontWeight.bold))),
+                                  DataColumn(label: Text("Action", style: TextStyle(fontWeight: FontWeight.bold))),
+                                  //DataColumn(label: Text("Statut", style: TextStyle(fontWeight: FontWeight.bold))),
                                 ],
-                                rows: _reservations.map((res) {
+                                rows: _factures.map((facture) {
                                   return DataRow(cells: [
-                                    DataCell(Text(res['IdReservation']?.toString() ?? "")),
-                                    DataCell(Text(res['DateReservation']?.toString() ?? "")),
-                                    DataCell(Text(res['client_name']?.toString() ?? "")),
-                                    DataCell(Text(res['designationEspace']?.toString() ?? "")),
-                                    DataCell(Text(res['DateArrivee']?.toString() ?? "")),
-                                    DataCell(Text(res['DateDepart']?.toString() ?? "")),
-                                    DataCell(Text(res['NbreJours']?.toString() ?? "")),
-                                    DataCell(Text("${res['Totalpayer']} \$", style: const TextStyle(fontWeight: FontWeight.bold))),
-                                    DataCell(Text(res['statutReservation']?.toString() ?? "")),
+                                    DataCell(Text(facture['IdFacture']?.toString() ?? "")),
+                                    DataCell(Text(facture['dateFacturation']?.toString() ?? "")),
+                                    DataCell(Text(facture['client_name']?.toString() ?? "")),
+                                    DataCell(Text(facture['designationEspace']?.toString() ?? "")),
+                                    DataCell(Text(facture['DateArrivee']?.toString() ?? "")),
+                                    DataCell(Text(facture['DateDepart']?.toString() ?? "")),
+                                    //DataCell(Text(facture['NbreJours']?.toString() ?? "")),
+                                    DataCell(Text("${facture['Totalpayer']} \$", style: const TextStyle(fontWeight: FontWeight.bold))), // Changed from FontWeight.FontWeight.bold to FontWeight.bold
+                                    //DataCell(Text(facture['statutReservation']?.toString() ?? "")),
+                                    DataCell(
+                                      IconButton(
+                                        icon: const Icon(Icons.print, color: Color.fromARGB(255, 121, 169, 240)),
+                                        tooltip: "Réimprimer la facture",
+                                        onPressed: () => _printFacture(Map<String, dynamic>.from(facture)),
+                                      ),
+                                    ),
                                   ]);
                                 }).toList(),
                               ),
