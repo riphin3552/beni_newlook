@@ -1,4 +1,4 @@
-import 'dart:convert';
+﻿import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:pdf/pdf.dart';
@@ -12,6 +12,9 @@ class EntrepriseInfos {
   final String telephone;
   final String email;
   final String logoPath;
+  final String numeroRCCM;
+  final String idNational;
+  final String numeroImpot;
 
   EntrepriseInfos({
     required this.denomination,
@@ -19,6 +22,9 @@ class EntrepriseInfos {
     required this.telephone,
     required this.email,
     required this.logoPath,
+    required this.numeroRCCM,
+    required this.idNational,
+    required this.numeroImpot,
   });
 
   factory EntrepriseInfos.fromJson(Map<String, dynamic> json) {
@@ -28,6 +34,9 @@ class EntrepriseInfos {
       telephone: json['Telephone'] ?? '',
       email: json['Email'] ?? '',
       logoPath: json['logo_path'] ?? '',
+      numeroRCCM: json['Numero_RCCM'] ?? '',
+      idNational: json['ID_national'] ?? '',
+      numeroImpot: json['Numero_impot'] ?? '',
     );
   }
 }
@@ -106,7 +115,14 @@ Future<pw.Document> buildEspacesOccupesPdf(int idEse) async {
   final entreprise = await fetchEntreprise(idEse);
   final espaces = await fetchEspacesOccupes(idEse);
   final pdf = pw.Document();
-  final logo = await networkImage(entreprise.logoPath);
+  dynamic logo;
+  try {
+    if (entreprise.logoPath.isNotEmpty) {
+      logo = await flutterImageProvider(NetworkImage(entreprise.logoPath));
+    }
+  } catch (_) {
+    logo = null;
+  }
   
   // Charger une police qui supporte les accents (Unicode)
   final font = await PdfGoogleFonts.robotoRegular();
@@ -122,13 +138,17 @@ Future<pw.Document> buildEspacesOccupesPdf(int idEse) async {
             pw.Column(
               crossAxisAlignment: pw.CrossAxisAlignment.start,
               children: [
-                pw.Text(entreprise.denomination, style: pw.TextStyle(fontSize: 20, fontWeight: pw.FontWeight.bold, font: fontBold)),
-                pw.Text("Adresse: ${entreprise.adresse}"),
-                pw.Text("Téléphone: ${entreprise.telephone}"),
-                pw.Text("Email: ${entreprise.email}"),
+                pw.Text(entreprise.denomination, style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold, font: fontBold)),
+                pw.Text("RCCM: ${entreprise.numeroRCCM}", style: const pw.TextStyle(fontSize: 9)),
+                pw.Text("ID National: ${entreprise.idNational}", style: const pw.TextStyle(fontSize: 9)),
+                pw.Text("N° Impôt: ${entreprise.numeroImpot}", style: const pw.TextStyle(fontSize: 9)),
+                pw.Text("Adresse: ${entreprise.adresse}", style: const pw.TextStyle(fontSize: 9)),
+                pw.Text("Tél: ${entreprise.telephone}", style: const pw.TextStyle(fontSize: 9)),
+                pw.Text("Email: ${entreprise.email}", style: const pw.TextStyle(fontSize: 9)),
               ],
             ),
-            pw.SizedBox(height: 60, width: 60, child: pw.Image(logo)),
+            if (logo != null)
+              pw.SizedBox(height: 60, width: 60, child: pw.Image(logo)),
           ],
         ),
         pw.SizedBox(height: 20),

@@ -4,7 +4,7 @@ import 'package:beni_newlook/Rapports/FactureAutresServices.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_typeahead/flutter_typeahead.dart';
 import 'package:http/http.dart' as http;
-//import 'package:shared_preferences/shared_preferences.dart';
+import 'package:printing/printing.dart';
 
 class FactureAutreServices extends StatefulWidget {
   final int idEntreprise;
@@ -83,11 +83,36 @@ Future<List<dynamic>> fetchFacturationAutresServices(int entrepriseId) async {
       );
       final entrepriseData = jsonDecode(entrepriseResponse.body)['data'];
 
-      await generateThermalFacturePDF(entrepriseData, facture);
+      final pdf = await buildAutresServicesDocument(entrepriseData, facture);
+
+      if (!mounted) return;
+
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Prévisualisation Facture'),
+          content: SizedBox(
+            width: double.maxFinite,
+            height: 500,
+            child: PdfPreview(
+              build: (format) => pdf.save(),
+              allowPrinting: true,
+              allowSharing: true,
+              pdfFileName: "facture_service_${facture['idFacturationAutresServices']}.pdf",
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Fermer'),
+            ),
+          ],
+        ),
+      );
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Erreur lors de l'impression: $e"), backgroundColor: Colors.red),
+        SnackBar(content: Text("Erreur lors de la prévisualisation: $e"), backgroundColor: Colors.red),
       );
     }
   }
@@ -486,10 +511,16 @@ Future<void> fetchSectionsauxriliaires(int entrepriseId) async {
                               DataCell(Text(facture['designationSectionAuxi'] ?? "")),
                               DataCell(Text("${facture['MontantPayer'] ?? "0"} \$")),
                               DataCell(
-                                IconButton(
-                                  icon: const Icon(Icons.print, color: Color.fromARGB(255, 121, 169, 240)),
-                                  tooltip: "Réimprimer la facture",
+                                ElevatedButton.icon(
                                   onPressed: () => _printFacture(Map<String, dynamic>.from(facture)),
+                                  icon: const Icon(Icons.print, size: 16),
+                                  label: const Text("Imprimer"),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: const Color.fromARGB(255, 121, 169, 240),
+                                    foregroundColor: Colors.white,
+                                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+                                  ),
                                 ),
                               ),
                             ],

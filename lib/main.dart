@@ -11,6 +11,7 @@ import 'package:beni_newlook/PageCommande.dart';
 import 'package:beni_newlook/Rapports/ListeProduits.dart';
 import 'package:beni_newlook/TypesStock.dart';
 import 'package:beni_newlook/pages/MenuLogement.dart';
+import 'package:beni_newlook/pages/MenuCaisse.dart';
 import 'package:beni_newlook/pages/MenuFacturation.dart';
 import 'package:beni_newlook/pages/TypeProduit.dart';
 import 'package:beni_newlook/pages/Utilisateurs.dart';
@@ -74,6 +75,7 @@ class _MainMenuState extends State<MainMenu> {
   String username = 'Utilisateur';
   String entrepriseName= 'Chargement...';
   int idEntreprise = 0;
+  int idUtilisateur = 0;
   
   late String currentDate;
   late Timer _timer;
@@ -123,7 +125,7 @@ class _MainMenuState extends State<MainMenu> {
       case 2:
         return  MenuGestionlogement(titreMenuGestionLogement: "Logement", identreprise: widget.identreprise,); // contenu menu logement
       case 3:
-        return const _Page(title: 'Caisse');
+        return MenuCaisse(titreMenuCaisse: 'Gestion de Caisse', identreprise: widget.identreprise, idUtilisateur: idUtilisateur,); // contenu menu caisse
       case 4:
         return Menufacturation(idEntreprise: widget.identreprise, titreMenuFacturation: 'Facturation'); // contenu menu facturation
       case 5:
@@ -165,8 +167,10 @@ class _MainMenuState extends State<MainMenu> {
     if (response.statusCode == 200 && data['success'] == true) {
       if (data['user']['Nom_utilisateur'] != null) {
         setState(() {
+
           username = data['user']['Nom_utilisateur'] ?? 'Utilisateur'; // valeur par défaut si null
           idEntreprise = data['user']['entreprise']; // recuperation de l'id de l'entreprise
+          idUtilisateur = data['user']['ID_utilisateur']; // recuperation de l'id de l'utilisateur
         });
 
         selectEntrepriseName(idEntreprise); // appel de la fonction pour selectionner le nom de l'entreprise

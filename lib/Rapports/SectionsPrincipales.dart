@@ -353,8 +353,6 @@ void _refreshSections() {
                                 headingRowHeight: 56,
                                 // ignore: deprecated_member_use
                                 dataRowHeight: 48,
-                                columnSpacing: 0, // Espacement géré manuellement par SizedBox
-                                horizontalMargin: 24,
                                 border: TableBorder(
                                   horizontalInside: BorderSide(color: Colors.grey[300]!),
                                   bottom: BorderSide(color: Colors.grey[300]!),

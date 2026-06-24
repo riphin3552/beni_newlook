@@ -1,4 +1,4 @@
-import 'dart:convert';
+﻿import 'dart:convert';
 
 //import 'package:beni_newlook/Rapports/RapportEntrees.dart';
 import 'package:flutter/material.dart';
@@ -250,7 +250,7 @@ Future<List<Map<String, dynamic>>> fetchEntreeProduits(int entrepriseId) async {
   if (response.statusCode == 200) {
     var data = json.decode(response.body);
 
-    // ⚠️ Ton API renvoie une liste d’objets JSON
+    // ⚠️ Ton API renvoie une liste d'objets JSON
     if (data is List) {
       // 👇 conversion explicite en List<Map<String, dynamic>>
       return data.map((e) => Map<String, dynamic>.from(e)).toList();
@@ -837,7 +837,10 @@ class EntrepriseInfos {
   final String adresse;
   final String telephone;
   final String email;
-  final String logoPath; // 👈 ajout du logo
+  final String logoPath;
+  final String numeroRCCM;
+  final String idNational;
+  final String numeroImpot;
 
   EntrepriseInfos({
     required this.denomination,
@@ -845,15 +848,21 @@ class EntrepriseInfos {
     required this.telephone,
     required this.email,
     required this.logoPath,
+    required this.numeroRCCM,
+    required this.idNational,
+    required this.numeroImpot,
   });
 
   factory EntrepriseInfos.fromJson(Map<String, dynamic> json) {
     return EntrepriseInfos(
-      denomination: json['Denomination'],
-      adresse: json['Adresse'],
-      telephone: json['Telephone'],
-      email: json['Email'],
-      logoPath: json['logo_path'], // 👈 récupération du logo depuis l’API
+      denomination: json['Denomination'] ?? '',
+      adresse: json['Adresse'] ?? '',
+      telephone: json['Telephone'] ?? '',
+      email: json['Email'] ?? '',
+      logoPath: json['logo_path'] ?? '',
+      numeroRCCM: json['Numero_RCCM'] ?? '',
+      idNational: json['ID_national'] ?? '',
+      numeroImpot: json['Numero_impot'] ?? '',
     );
   }
 }
@@ -882,8 +891,14 @@ final fontBold = pw.Font.ttf(await rootBundle.load("assets/fonts/Roboto-Bold.ttf
 
   final pdf = pw.Document();
 
-  // Charger le logo depuis l’URL
-  final logo = entreprise.logoPath.isNotEmpty ? await networkImage(entreprise.logoPath) : null;
+  dynamic logo;
+  try {
+    if (entreprise.logoPath.isNotEmpty) {
+      logo = await flutterImageProvider(NetworkImage(entreprise.logoPath));
+    }
+  } catch (_) {
+    logo = null;
+  }
 
   pdf.addPage(
     pw.MultiPage(
@@ -901,10 +916,13 @@ final fontBold = pw.Font.ttf(await rootBundle.load("assets/fonts/Roboto-Bold.ttf
               crossAxisAlignment: pw.CrossAxisAlignment.start,
               children: [
                 pw.Text(entreprise.denomination,
-                    style: pw.TextStyle(fontSize: 20, fontWeight: pw.FontWeight.bold)),
-                pw.Text("Adresse: ${entreprise.adresse}"),
-                pw.Text("Téléphone: ${entreprise.telephone}"),
-                pw.Text("Email: ${entreprise.email}"),
+                    style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold)),
+                pw.Text("RCCM: ${entreprise.numeroRCCM}", style: const pw.TextStyle(fontSize: 9)),
+                pw.Text("ID National: ${entreprise.idNational}", style: const pw.TextStyle(fontSize: 9)),
+                pw.Text("N° Impôt: ${entreprise.numeroImpot}", style: const pw.TextStyle(fontSize: 9)),
+                pw.Text("Adresse: ${entreprise.adresse}", style: const pw.TextStyle(fontSize: 9)),
+                pw.Text("Tél: ${entreprise.telephone}", style: const pw.TextStyle(fontSize: 9)),
+                pw.Text("Email: ${entreprise.email}", style: const pw.TextStyle(fontSize: 9)),
               ],
             ),
             if (logo != null)
@@ -961,7 +979,7 @@ final fontBold = pw.Font.ttf(await rootBundle.load("assets/fonts/Roboto-Bold.ttf
   return pdf;
 }
 
-// ------------------ Page d’aperçu PDF ------------------
+// ------------------ Page d'aperçu PDF ------------------
 class PdfPrevisualiserPage extends StatelessWidget {
   final int idEse;
   final List<Map<String, dynamic>> entrees;
@@ -985,7 +1003,7 @@ class PdfPrevisualiserPage extends StatelessWidget {
           final pdf = snapshot.data!;
           return PdfPreview(
             build: (format) async => pdf.save(),
-            allowPrinting: true,   // 👈 permet d’imprimer après aperçu
+            allowPrinting: true,   // 👈 permet d'imprimer après aperçu
             allowSharing: true,    // 👈 permet de partager/exporter
           );
         },

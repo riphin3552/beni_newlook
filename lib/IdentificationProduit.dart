@@ -464,8 +464,8 @@ Widget build(BuildContext context) {
                         // ignore: deprecated_member_use
                         headingRowColor: WidgetStateProperty.all(Color.fromARGB(255, 121, 169, 240).withOpacity(0.15)),
                         headingRowHeight: 56,
-                        // ignore: deprecated_member_use
-                        dataRowHeight: 48,
+                        dataRowMinHeight: 48,
+                        dataRowMaxHeight: 60,
                         border: TableBorder(
                           horizontalInside: BorderSide(color: Colors.grey[300]!),
                           bottom: BorderSide(color: Colors.grey[300]!),

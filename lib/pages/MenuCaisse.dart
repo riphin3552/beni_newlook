@@ -1,31 +1,37 @@
-import 'package:beni_newlook/PageCommande.dart';
-import 'package:beni_newlook/pages/facturationAutreServices.dart';
-import 'package:beni_newlook/pages/facturationChambreEspace.dart';
-import 'package:beni_newlook/pages/factureslogement_date.dart';
+import 'package:beni_newlook/pages/EntreeCaisse.dart';
+import 'package:beni_newlook/pages/LivreCaisse.dart';
+import 'package:beni_newlook/pages/SortieCaisse.dart';
 import 'package:flutter/material.dart';
 
-class Menufacturation extends StatefulWidget {
-  final int idEntreprise;
-  final String titreMenuFacturation;
-  const Menufacturation({super.key, required this.idEntreprise, required this.titreMenuFacturation});
+class MenuCaisse extends StatefulWidget {
+  final String titreMenuCaisse;
+  final int identreprise;
+  final int idUtilisateur;
+
+  const MenuCaisse({
+    super.key,
+    required this.titreMenuCaisse,
+    required this.identreprise,
+    required this.idUtilisateur,
+  });
 
   @override
-  State<Menufacturation> createState() => _MenufacturationState();
+  State<MenuCaisse> createState() => _MenuCaisseState();
 }
 
-class _MenufacturationState extends State<Menufacturation> {
+class _MenuCaisseState extends State<MenuCaisse> {
   int _hoveredIndex = -1;
 
   @override
   Widget build(BuildContext context) {
     final primaryColor = const Color(0xFF0D47A1);
-
+    
     return Padding(
       padding: const EdgeInsets.all(24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Enhanced Header
+          // En-tête du menu
           Container(
             padding: const EdgeInsets.only(bottom: 20),
             decoration: BoxDecoration(
@@ -47,7 +53,7 @@ class _MenufacturationState extends State<Menufacturation> {
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Icon(
-                    Icons.receipt_long_rounded,
+                    Icons.account_balance_wallet,
                     color: primaryColor,
                     size: 28,
                   ),
@@ -57,7 +63,7 @@ class _MenufacturationState extends State<Menufacturation> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      widget.titreMenuFacturation,
+                      widget.titreMenuCaisse,
                       style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                         fontWeight: FontWeight.w700,
                         color: primaryColor,
@@ -65,7 +71,7 @@ class _MenufacturationState extends State<Menufacturation> {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'Gérez la facturation de vos différents services',
+                      'Gérez les flux financiers et le suivi de caisse',
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: Colors.grey[600],
                       ),
@@ -77,7 +83,7 @@ class _MenufacturationState extends State<Menufacturation> {
           ),
           const SizedBox(height: 28),
           
-          // Content Grid
+          // Grille d'options
           Expanded(
             child: SingleChildScrollView(
               child: SizedBox(
@@ -87,101 +93,72 @@ class _MenufacturationState extends State<Menufacturation> {
                   runSpacing: 24,
                   alignment: WrapAlignment.start,
                   children: [
-                    _buildSmartCard(
-                      context,
-                      index: 0,
-                      icon: Icons.restaurant_menu_rounded,
-                      title: 'Nourriture et boisson',
-                      description: 'Ventes restaurant et bar',
-                      color: const Color(0xFF1976D2),
-                      onTap: () {
-                        showDialog(
-                          context: context,
-                          builder: (context) => Dialog(
-                            child: SizedBox(
-                              width: 850,
-                              height: 650,
-                              child: CommandePage(
-                                idEntreprise: widget.idEntreprise,
-                              ),
-                            ),
+                  _buildSmartCard(
+                    context,
+                    index: 0,
+                    icon: Icons.add_circle_outline,
+                    title: 'Entree en caisse',
+                    description: 'Enregistrer une entrée',
+                    color: const Color(0xFF388E3C),
+                    onTap: () {
+                      // Action pour Entree en caisse
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => Entreecaisse(identreprise: widget.identreprise, idUtilisateur: widget.idUtilisateur)
+                        ),
+                      );
+                    },
+                  ),
+                  _buildSmartCard(
+                    context,
+                    index: 1,
+                    icon: Icons.remove_circle_outline,
+                    title: 'Sortie de caisse',
+                    description: 'Gérer les dépenses',
+                    color: const Color(0xFFD32F2F),
+                    onTap: () {
+                      // Action pour Sortie de caisse
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => SortieCaisse(identreprise: widget.identreprise, idUtilisateur: widget.idUtilisateur)
+                        ),
+                      );
+                    },
+                  ),
+                  _buildSmartCard(
+                    context,
+                    index: 2,
+                    icon: Icons.payments_outlined,
+                    title: 'Recouvrement creances',
+                    description: 'Suivi des paiements',
+                    color: const Color(0xFF1976D2),
+                    onTap: () {
+                      // Action pour Recouvrement creances
+                    },
+                  ),
+                  _buildSmartCard(
+                    context,
+                    index: 3,
+                    icon: Icons.auto_stories_outlined,
+                    title: 'Livre de caisse',
+                    description: 'Journal des opérations',
+                    color: const Color(0xFFF57C00),
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => LivreCaisse(
+                            identreprise: widget.identreprise,
+                            idUtilisateur: widget.idUtilisateur,
                           ),
-                        );
-                      },
-                    ),
-                    _buildSmartCard(
-                      context,
-                      index: 1,
-                      icon: Icons.bedroom_parent_rounded,
-                      title: 'Facture Espace/Chambre',
-                      description: 'Règlements des réservations',
-                      color: const Color(0xFF388E3C),
-                      onTap: () {
-                        showDialog(
-                          context: context,
-                          builder: (BuildContext context) {
-                            return Dialog(
-                              child: SizedBox(
-                                width: 850,
-                                height: 650,
-                                child: FacturationchambreEspace(
-                                  identreprise: widget.idEntreprise,
-                                ),
-                              ),
-                            );
-                          },
-                        );
-                      },
-                    ),
-                    _buildSmartCard(
-                      context,
-                      index: 2,
-                      icon: Icons.miscellaneous_services_rounded,
-                      title: 'Facture autres services',
-                      description: 'Services auxiliaires',
-                      color: const Color(0xFFF57C00),
-                      onTap: () {
-                        showDialog(
-                          context: context,
-                          builder: (BuildContext context) {
-                            return Dialog(
-                              child: SizedBox(
-                                width: 680,
-                                height: 500,
-                                child: FactureAutreServices(
-                                  idEntreprise: widget.idEntreprise,
-                                ),
-                              ),
-                            );
-                          },
-                        );
-                      },
-                    ),
-                    _buildSmartCard(
-                      context,
-                      index: 3,
-                      icon: Icons.receipt_long_rounded,
-                      title: 'Facture logement',
-                      description: 'Synthèse de facturation globale',
-                      color: const Color(0xFF7B1FA2),
-                      onTap: () {
-                        // Action for Global Billing
-                        showDialog(
-                          context: context,
-                          builder: (BuildContext context) {
-                            return Dialog(
-                              child: SizedBox(
-                                width: 800,
-                                height: 600,
-                                child: FacturesLogement_date(identreprise: widget.idEntreprise),
-                                ),
-                              );
-                          },
-                        );
-                      },
-                    ),
-                  ],
-                ),
+                        ),
+                      );
+                    },
+                  ),
+                ],
+              ),
               ),
             ),
           ),

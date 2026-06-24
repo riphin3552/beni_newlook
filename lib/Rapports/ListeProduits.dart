@@ -1,4 +1,4 @@
-
+﻿
 // Modèle Entreprise
 import 'dart:convert';
 
@@ -13,7 +13,10 @@ class EntrepriseInfos {
   final String adresse;
   final String telephone;
   final String email;
-  final String logoPath; // 👈 ajout du logo
+  final String logoPath;
+  final String numeroRCCM;
+  final String idNational;
+  final String numeroImpot;
 
   EntrepriseInfos({
     required this.denomination,
@@ -21,15 +24,21 @@ class EntrepriseInfos {
     required this.telephone,
     required this.email,
     required this.logoPath,
+    required this.numeroRCCM,
+    required this.idNational,
+    required this.numeroImpot,
   });
 
   factory EntrepriseInfos.fromJson(Map<String, dynamic> json) {
     return EntrepriseInfos(
-      denomination: json['Denomination'],
-      adresse: json['Adresse'],
-      telephone: json['Telephone'],
-      email: json['Email'],
-      logoPath: json['logo_path'], // 👈 récupération du logo
+      denomination: json['Denomination'] ?? '',
+      adresse: json['Adresse'] ?? '',
+      telephone: json['Telephone'] ?? '',
+      email: json['Email'] ?? '',
+      logoPath: json['logo_path'] ?? '',
+      numeroRCCM: json['Numero_RCCM'] ?? '',
+      idNational: json['ID_national'] ?? '',
+      numeroImpot: json['Numero_impot'] ?? '',
     );
   }
 }
@@ -101,8 +110,16 @@ Future<pw.Document> buildPdf(int idEse) async {
 
   final pdf = pw.Document();
 
-  // Charger le logo depuis l’URL
-  final logo = await networkImage(entreprise.logoPath);
+  dynamic logo;
+  try {
+    final rawPath = entreprise.logoPath;
+    final logoUrl = rawPath.startsWith('http')
+        ? rawPath
+        : 'https://riphin-salemanager.com/beni_newlook_API/$rawPath';
+    logo = await flutterImageProvider(NetworkImage(logoUrl));
+  } catch (_) {
+    logo = null;
+  }
 
   pdf.addPage(
     pw.MultiPage(
@@ -115,17 +132,21 @@ Future<pw.Document> buildPdf(int idEse) async {
               crossAxisAlignment: pw.CrossAxisAlignment.start,
               children: [
                 pw.Text(entreprise.denomination,
-                    style: pw.TextStyle(fontSize: 20, fontWeight: pw.FontWeight.bold)),
-                pw.Text("Adresse: ${entreprise.adresse}"),
-                pw.Text("Téléphone: ${entreprise.telephone}"),
-                pw.Text("Email: ${entreprise.email}"),
+                    style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold)),
+                pw.Text("RCCM: ${entreprise.numeroRCCM}", style: const pw.TextStyle(fontSize: 9)),
+                pw.Text("ID National: ${entreprise.idNational}", style: const pw.TextStyle(fontSize: 9)),
+                pw.Text("N° Impôt: ${entreprise.numeroImpot}", style: const pw.TextStyle(fontSize: 9)),
+                pw.Text("Adresse: ${entreprise.adresse}", style: const pw.TextStyle(fontSize: 9)),
+                pw.Text("Tél: ${entreprise.telephone}", style: const pw.TextStyle(fontSize: 9)),
+                pw.Text("Email: ${entreprise.email}", style: const pw.TextStyle(fontSize: 9)),
               ],
             ),
-            pw.Container(
-              height: 60,
-              width: 60,
-              child: pw.Image(logo), // 👈 affichage du logo
-            ),
+            if (logo != null)
+              pw.Container(
+                height: 60,
+                width: 60,
+                child: pw.Image(logo),
+              ),
           ],
         ),
         pw.SizedBox(height: 20),
@@ -173,7 +194,7 @@ Future<pw.Document> buildPdf(int idEse) async {
   return pdf;
 }
 
-// Page d’aperçu PDF
+// Page d'aperçu PDF
 class PdfPreviewPAGE extends StatelessWidget {
   final int idEse;
   const PdfPreviewPAGE({super.key, required this.idEse});

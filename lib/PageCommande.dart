@@ -351,19 +351,18 @@ Future<void> addCommande() async {
     //print("Response API: $data"); // Debug: afficher la réponse complète
     //print("datecommande envoyée: ${_dateController.text}"); // Debug: vérifier la date envoyée
     if (data['success']) {
+      final pageContext = context; // contexte parent stable
       // ignore: use_build_context_synchronously
-      showDialog(context: context, 
-      builder: (BuildContext context) {
+      showDialog(context: pageContext,
+      builder: (BuildContext dialogContext) {
         return AlertDialog(
           title: const Text("Succès"),
           content: const Text("La commande a été enregistrée et facturée avec succès!"),
           actions: [
             TextButton(
               onPressed: () async {
-                Navigator.of(context).pop();
-                int? idcommande = data['idCommande']; // Récupérer l'ID de la commande créée
-                //print("ID de la commande créée: $idcommande");
-                //recuperer la facture et les details de la commande pour les afficher dans la page de facture
+                Navigator.of(dialogContext).pop();
+                int? idcommande = data['idCommande'];
                 final factureResponse=await http.post(
                   Uri.parse("https://riphin-salemanager.com/beni_newlook_API/facture.php"),
                   headers: {'Content-Type': 'application/json'},
@@ -373,33 +372,39 @@ Future<void> addCommande() async {
                 );
                 final factureData=jsonDecode(factureResponse.body);
                 if(factureData['success'] && factureData['data'] != null){
-                  // recupere infos entreprise
                   final entrepriseResponse=await http.post(
                     Uri.parse("https://riphin-salemanager.com/beni_newlook_API/AfficherInfos_Ese.php"),
                     headers: {'Content-Type': 'application/json'},
                     body: jsonEncode({"idEse": widget.idEntreprise}),
                   );
                   final entrepriseData=jsonDecode(entrepriseResponse.body)['data'];
-                    //generer le pdf thermiaque de la facture
-                    await generateThermalFacturePDF(entrepriseData, factureData['data']);
-                    
-                    //print("FactureData utiliser pour le PDF: ${factureData['data']}"); // Debug: afficher les données de la facture
-                }else{
-                  //Gestion erreur si la fqcture non trouvable
-                  // ignore: use_build_context_synchronously
-                  showDialog(context: context,
-                  builder: (BuildContext context) {
-                    return AlertDialog(
-                      title: const Text("Erreur"),
-                      content: Text("La facture de la commande n'a pas pu être récupérée: ${factureData['message']}"),
-                      actions: [
-                        TextButton(
-                          onPressed: () => Navigator.of(context).pop(),
-                          child: const Text("OK"),
+                  if (pageContext.mounted) {
+                    Navigator.push(
+                      pageContext,
+                      MaterialPageRoute(
+                        builder: (context) => FacturePreviewPage(
+                          entreprise: entrepriseData,
+                          facture: factureData['data'],
                         ),
-                      ],
+                      ),
                     );
-                  });
+                  }
+                }else{
+                  if (pageContext.mounted) {
+                    showDialog(context: pageContext,
+                    builder: (BuildContext context) {
+                      return AlertDialog(
+                        title: const Text("Erreur"),
+                        content: Text("La facture de la commande n'a pas pu être récupérée: ${factureData['message']}"),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.of(context).pop(),
+                            child: const Text("OK"),
+                          ),
+                        ],
+                      );
+                    });
+                  }
                 }
                 },
                   
@@ -854,8 +859,8 @@ Future<void> addCommande() async {
         FilledButton.icon(
           icon: const Icon(Icons.check_circle_outline),
           label: const Text("Valider la commande et Facturer"),
-          onPressed: ()  {
-              addCommande();
+          onPressed: () async {
+              await addCommande();
               setState(() {
                 panier.clear();
                 _clientController.clear();
