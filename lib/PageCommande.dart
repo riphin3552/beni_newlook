@@ -450,62 +450,106 @@ Future<void> addCommande() async {
 
 
 
-  InputDecoration _inputDecoration(
-      {required String labelText, required IconData icon}) {
-    final theme = Theme.of(context);
+  static const Color _primary   = Color(0xFF0D47A1);
+  static const Color _accent    = Color(0xFF1976D2);
+  static const Color _bgLight   = Color(0xFFF5F8FF);
+  static const Color _green     = Color(0xFF388E3C);
+
+  InputDecoration _inputDecoration({required String labelText, required IconData icon}) {
     return InputDecoration(
       labelText: labelText,
-      prefixIcon: Icon(icon, color: theme.colorScheme.primary),
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12.0),
+      labelStyle: const TextStyle(color: _accent),
+      prefixIcon: Icon(icon, color: _accent, size: 20),
+      filled: true,
+      fillColor: Colors.white,
+      border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(10),
+        borderSide: BorderSide(color: Colors.grey.shade300),
       ),
       focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12.0),
-        borderSide: BorderSide(color: theme.colorScheme.primary, width: 2),
+        borderRadius: BorderRadius.circular(10),
+        borderSide: const BorderSide(color: _primary, width: 2),
       ),
-      enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12.0),
-        borderSide: BorderSide(color: Colors.grey.shade400),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+    );
+  }
+
+  Widget _sectionHeader(String numero, String titre, IconData icon, Color color) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Row(
+        children: [
+          Container(
+            width: 32, height: 32,
+            decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(8)),
+            child: Center(
+              child: Text(numero,
+                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 14)),
+            ),
+          ),
+          const SizedBox(width: 10),
+          Icon(icon, color: color, size: 20),
+          const SizedBox(width: 8),
+          Text(titre,
+              style: TextStyle(
+                  fontWeight: FontWeight.w700, fontSize: 15, color: Colors.grey[800])),
+        ],
       ),
     );
   }
 
-  Widget _buildSectionTitle(String title) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8.0),
-      child: Text(
-        title,
-        style: Theme.of(context)
-            .textTheme
-            .titleLarge
-            ?.copyWith(fontWeight: FontWeight.bold),
+  Widget _styledCard({required Widget child}) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        boxShadow: [
+          BoxShadow(
+            color: _primary.withValues(alpha: 0.07),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
+      child: child,
     );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Nouvelle Commande", style: TextStyle(color: Colors.white)), centerTitle: true,
-      backgroundColor:Color.fromARGB(255, 54, 67, 87)
+      backgroundColor: _bgLight,
+      appBar: AppBar(
+        title: const Text('Nouvelle Commande',
+            style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
+        centerTitle: true,
+        backgroundColor: _primary,
+        foregroundColor: Colors.white,
+        elevation: 3,
+        leading: IconButton(
+          icon: const Icon(Icons.close),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(20),
         child: Form(
           key: _formKey,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildSectionTitle("1. Informations générales"),
+              _sectionHeader('1', 'Informations générales', Icons.info_outline, _accent),
               _buildInformationsGeneralesCard(),
-              const SizedBox(height: 24),
-              _buildSectionTitle("2. Détails produit"),
+              const SizedBox(height: 22),
+              _sectionHeader('2', 'Sélection du produit', Icons.inventory_2_outlined, const Color(0xFF7B1FA2)),
               _buildDetailsProduitCard(),
-              const SizedBox(height: 24),
-              _buildSectionTitle("3. Panier"),
+              const SizedBox(height: 22),
+              _sectionHeader('3', 'Panier de commande', Icons.shopping_cart_outlined, _green),
               _buildCartCard(),
-              const SizedBox(height: 24),
+              const SizedBox(height: 22),
               _buildTotalAndValidateSection(),
+              const SizedBox(height: 16),
             ],
           ),
         ),
@@ -514,93 +558,65 @@ Future<void> addCommande() async {
   }
 
   Widget _buildInformationsGeneralesCard() {
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+    return _styledCard(
       child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
+        padding: const EdgeInsets.all(18),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  child: TypeAheadField<Map<String, dynamic>>(
-                    controller: _clientController,
-                    suggestionsCallback: (pattern) async {
-                      if (pattern.isEmpty || pattern.length < 2) return [];
-                      final response = await http.post(
-                        Uri.parse(
-                            'https://riphin-salemanager.com/beni_newlook_API/FetchANDaddClient.php'),
-                        headers: {'Content-Type': 'application/json'},
-                        body: jsonEncode({
-                          'client': pattern,
-                          'entreprise': widget.idEntreprise
-                        }),
-                      );
-                      if (response.statusCode == 200) {
-                        final json = jsonDecode(response.body);
-                        if (json['client'] != null) {
-                          return [
-                            {
-                              "client_id": json['client']['id'],
-                              "client_name": json['client']['client_name'],
-                              "Id_Ese": json['client']['Id_Ese'],
-                            }
-                          ];
-                        }
-                      }
-                      return [];
-                    },
-                    builder: (context, controller, focusNode) =>
-                        TextFormField(
-                      controller: _clientController,
-                      focusNode: focusNode,
-                      decoration: _inputDecoration(
-                          labelText: 'Rechercher client',
-                          icon: Icons.person_search),
-                      validator: (value) => value == null || value.isEmpty
-                          ? 'Veuillez entrer un client'
-                          : null,
-                    ),
-                    itemBuilder: (context, suggestion) =>
-                        ListTile(title: Text(suggestion['client_name'])),
-                    onSelected: (suggestion) {
-                      setState(() {
-                        _clientController.text = suggestion['client_name'];
-                        selectedClient = suggestion['client_id'];
-                      });
-                    },
-                  ),
+            Expanded(
+              child: TypeAheadField<Map<String, dynamic>>(
+                controller: _clientController,
+                suggestionsCallback: (pattern) async {
+                  if (pattern.isEmpty || pattern.length < 2) return [];
+                  final response = await http.post(
+                    Uri.parse('https://riphin-salemanager.com/beni_newlook_API/FetchANDaddClient.php'),
+                    headers: {'Content-Type': 'application/json'},
+                    body: jsonEncode({'client': pattern, 'entreprise': widget.idEntreprise}),
+                  );
+                  if (response.statusCode == 200) {
+                    final json = jsonDecode(response.body);
+                    if (json['client'] != null) {
+                      return [{
+                        "client_id": json['client']['id'],
+                        "client_name": json['client']['client_name'],
+                        "Id_Ese": json['client']['Id_Ese'],
+                      }];
+                    }
+                  }
+                  return [];
+                },
+                builder: (context, controller, focusNode) => TextFormField(
+                  controller: _clientController,
+                  focusNode: focusNode,
+                  decoration: _inputDecoration(labelText: 'Rechercher client', icon: Icons.person_search_outlined),
+                  validator: (v) => v == null || v.isEmpty ? 'Veuillez entrer un client' : null,
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: DropdownButtonFormField<int>(
-                    decoration: _inputDecoration(
-                        labelText: 'Source commande', icon: Icons.inventory_2),
-                    items: sections.map((produit) {
-                      return DropdownMenuItem<int>(
-                        value: produit['idSection'],
-                        child: Text(produit['descptionSection']),
-                      );
-                    }).toList(),
-                    onChanged: (newValue) {
-                      setState(() {
-                        selectedSection = newValue;
-                      });
-                      if (selectedSection != null && selectedProduit != null) {
-                        fetchProduitDansStock();
-                      }
-                    },
-                    validator: (value) => value == null
-                        ? 'Veuillez sélectionner une section'
-                        : null,
-                  ),
+                itemBuilder: (context, s) => ListTile(
+                  leading: const Icon(Icons.person, color: _accent),
+                  title: Text(s['client_name']),
                 ),
-              ],
+                onSelected: (s) => setState(() {
+                  _clientController.text = s['client_name'];
+                  selectedClient = s['client_id'];
+                }),
+              ),
             ),
-            const SizedBox(height: 16),
-            
+            const SizedBox(width: 14),
+            Expanded(
+              child: DropdownButtonFormField<int>(
+                decoration: _inputDecoration(labelText: 'Source / Section', icon: Icons.storefront_outlined),
+                items: sections.map((s) => DropdownMenuItem<int>(
+                  value: s['idSection'],
+                  child: Text(s['descptionSection']),
+                )).toList(),
+                onChanged: (v) {
+                  setState(() => selectedSection = v);
+                  if (selectedSection != null && selectedProduit != null) fetchProduitDansStock();
+                },
+                validator: (v) => v == null ? 'Veuillez sélectionner une section' : null,
+              ),
+            ),
           ],
         ),
       ),
@@ -608,239 +624,266 @@ Future<void> addCommande() async {
   }
 
   Widget _buildDetailsProduitCard() {
-  return Card(
-    elevation: 2,
-    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-    child: Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          TypeAheadField<Map<String, dynamic>>(
-            key: UniqueKey(), // ✅ force rebuild après chaque commande
-            controller: _produitController,
-            suggestionsCallback: _suggestionProduits,
-            builder: (context, controller, focusNode) => TextFormField(
-              controller: controller,
-              focusNode: focusNode,
-              decoration: _inputDecoration(
-                labelText: "Rechercher produit",
-                icon: Icons.search,
+    return _styledCard(
+      child: Padding(
+        padding: const EdgeInsets.all(18),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            TypeAheadField<Map<String, dynamic>>(
+              key: UniqueKey(),
+              controller: _produitController,
+              suggestionsCallback: _suggestionProduits,
+              builder: (context, controller, focusNode) => TextFormField(
+                controller: controller,
+                focusNode: focusNode,
+                decoration: _inputDecoration(labelText: 'Rechercher un produit', icon: Icons.search),
               ),
+              itemBuilder: (context, s) => ListTile(
+                leading: const Icon(Icons.inventory_2_outlined, color: Color(0xFF7B1FA2)),
+                title: Text(s['designationProduit']),
+              ),
+              onSelected: (s) async {
+                selectedProduit = int.parse(s['id'].toString());
+                final produit = await fetchProduitDansStock();
+                setState(() {
+                  produitDetails = produit;
+                  _produitController.text = produit['designationProduit'];
+                  prixController.text = produit['PrixVente'].toString();
+                  stockController.text = produit['QuantiteDisponible'].toString();
+                  uniteController.text = produit['uniteMesure'];
+                  seuilController.text = produit['seuil_minimum'].toString();
+                });
+              },
             ),
-            itemBuilder: (context, suggestion) =>
-                ListTile(title: Text(suggestion["designationProduit"])),
-            onSelected: (suggestion) async {
-              selectedProduit = int.parse(suggestion["id"].toString());
-              final produit = await fetchProduitDansStock();
-              setState(() {
-                produitDetails = produit;
-                _produitController.text = produit["designationProduit"];
-                prixController.text = produit["PrixVente"].toString();
-                stockController.text = produit["QuantiteDisponible"].toString();
-                uniteController.text = produit["uniteMesure"];
-                seuilController.text = produit["seuil_minimum"].toString();
-              });
-            },
-          ),
 
-          if (produitDetails != null) ...[
-            const SizedBox(height: 16),
-            Text("Détails du produit",
-                style: Theme.of(context).textTheme.titleMedium),
-            const SizedBox(height: 16),
-
-            Row(children: [
-              Expanded(
-                child: TextFormField(
-                  controller: prixController,
-                  keyboardType: TextInputType.number,
-                  decoration: _inputDecoration(
-                    labelText: "Prix de vente",
-                    icon: Icons.attach_money,
-                  ),
-                  onChanged: (val) {
-                    produitDetails!["PrixVente"] =
-                        int.tryParse(val) ?? produitDetails!["PrixVente"];
-                  },
+            if (produitDetails != null) ...[
+              const SizedBox(height: 16),
+              // Fiche produit compacte
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF3E5F5),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: const Color(0xFF7B1FA2).withValues(alpha: 0.2)),
                 ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: TextFormField(
-                  controller: stockController,
-                  readOnly: true,
-                  decoration: _inputDecoration(
-                    labelText: "Qte disponible",
-                    icon: Icons.inventory,
-                  ),
-                ),
-              ),
-            ]),
-            const SizedBox(height: 12),
-
-            Row(children: [
-              Expanded(
-                child: TextFormField(
-                  controller: uniteController,
-                  readOnly: true,
-                  decoration: _inputDecoration(
-                    labelText: "Unité",
-                    icon: Icons.square_foot,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: TextFormField(
-                  controller: seuilController,
-                  readOnly: true,
-                  decoration: _inputDecoration(
-                    labelText: "Seuil minimum",
-                    icon: Icons.warning_amber_rounded,
-                  ),
-                ),
-              ),
-            ]),
-          ],
-
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              Expanded(
-                flex: 2,
-                child: TextFormField(
-                  controller: _quantiteController,
-                  keyboardType: TextInputType.number,
-                  decoration: _inputDecoration(
-                    labelText: "Quantité à commander",
-                    icon: Icons.production_quantity_limits,
-                  ),
-                  validator: (value) => value == null || value.isEmpty
-                      ? "Veuillez entrer une quantité"
-                      : null,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                flex: 3,
-                child: FilledButton.icon(
-                  onPressed: () {
-                    if (_formKey.currentState!.validate()) {
-                      if (produitDetails != null) {
-                        _ajouterAuPanier(produitDetails!);
-                      } else {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text("Veuillez sélectionner un produit d'abord."),
-                          ),
-                        );
-                      }
-                    }
-                  },
-                  icon: const Icon(Icons.add_shopping_cart),
-                  label: const Text("Ajouter au panier"),
-                  style: FilledButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                child: Row(
+                  children: [
+                    const Icon(Icons.info_outline, color: Color(0xFF7B1FA2), size: 18),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Wrap(
+                        spacing: 12,
+                        runSpacing: 6,
+                        children: [
+                          _infoChip(Icons.attach_money, 'Prix', '${produitDetails!["PrixVente"]} CDF',
+                              const Color(0xFF388E3C)),
+                          _infoChip(Icons.inventory, 'Stock', stockController.text,
+                              const Color(0xFF1976D2)),
+                          _infoChip(Icons.square_foot, 'Unité', uniteController.text,
+                              const Color(0xFFF57C00)),
+                          _infoChip(Icons.warning_amber_rounded, 'Seuil', seuilController.text,
+                              const Color(0xFFD32F2F)),
+                        ],
+                      ),
                     ),
-                  ),
+                    // Champ prix modifiable
+                    SizedBox(
+                      width: 130,
+                      child: TextFormField(
+                        controller: prixController,
+                        keyboardType: TextInputType.number,
+                        decoration: _inputDecoration(labelText: 'Prix vente', icon: Icons.edit),
+                        onChanged: (val) {
+                          produitDetails!['PrixVente'] =
+                              int.tryParse(val) ?? produitDetails!['PrixVente'];
+                        },
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
-          ),
-        ],
-      ),
-    ),
-  );
-}
 
-
-  Widget _buildCartCard() {
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
+            const SizedBox(height: 16),
             Row(
               children: [
                 Expanded(
-                    flex: 4,
-                    child: Text("Produit",
-                        style: TextStyle(fontWeight: FontWeight.bold))),
+                  flex: 2,
+                  child: TextFormField(
+                    controller: _quantiteController,
+                    keyboardType: TextInputType.number,
+                    decoration: _inputDecoration(
+                        labelText: 'Quantité à commander',
+                        icon: Icons.production_quantity_limits),
+                    validator: (v) =>
+                        v == null || v.isEmpty ? 'Veuillez entrer une quantité' : null,
+                  ),
+                ),
+                const SizedBox(width: 12),
                 Expanded(
-                    flex: 2,
-                    child: Text("Quantité",
-                        textAlign: TextAlign.center,
-                        style: TextStyle(fontWeight: FontWeight.bold))),
-                Expanded(
-                    flex: 3,
-                    child: Text("Prix Unitaire",
-                        textAlign: TextAlign.right,
-                        style: TextStyle(fontWeight: FontWeight.bold))),
-                Expanded(
-                    flex: 3,
-                    child: Text("Sous-total",
-                        textAlign: TextAlign.right,
-                        style: TextStyle(fontWeight: FontWeight.bold))),
-                SizedBox(width: 48), // Space for delete icon
+                  flex: 3,
+                  child: ElevatedButton.icon(
+                    onPressed: () {
+                      if (_formKey.currentState!.validate()) {
+                        if (produitDetails != null) {
+                          _ajouterAuPanier(produitDetails!);
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                                content: Text('Veuillez sélectionner un produit d\'abord.')),
+                          );
+                        }
+                      }
+                    },
+                    icon: const Icon(Icons.add_shopping_cart_outlined),
+                    label: const Text('Ajouter au panier'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF7B1FA2),
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      elevation: 2,
+                    ),
+                  ),
+                ),
               ],
             ),
-            Divider(),
-            if (panier.isEmpty)
-              const Padding(
-                padding: EdgeInsets.symmetric(vertical: 16.0),
-                child: Text("Le panier est vide."),
-              )
-            else
-              ListView.separated(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount: panier.length,
-                separatorBuilder: (context, index) => const Divider(height: 1),
-                itemBuilder: (context, index) {
-                  final item = panier[index];
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 4.0),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        Expanded(flex: 4, child: Text(item["produit"])),
-                        Expanded(
-                            flex: 2,
-                            child: Text(item["quantite"].toString(),
-                                textAlign: TextAlign.center)),
-                        Expanded(
-                            flex: 3,
-                            child: Text("${item["prixUnitaire"]}",
-                                textAlign: TextAlign.right)),
-                        Expanded(
-                            flex: 3,
-                            child: Text(
-                                "${item["quantite"] * item["prixUnitaire"]}",
-                                textAlign: TextAlign.right)),
-                        SizedBox(
-                          width: 48,
-                          child: IconButton(
-                            icon: const Icon(Icons.delete_outline,
-                                color: Colors.red),
-                            onPressed: () {
-                              setState(() {
-                                panier.removeAt(index);
-                              });
-                            },
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                },
-              ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _infoChip(IconData icon, String label, String value, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 14, color: color),
+          const SizedBox(width: 5),
+          Text('$label: ', style: TextStyle(fontSize: 11, color: color, fontWeight: FontWeight.w600)),
+          Text(value, style: TextStyle(fontSize: 11, color: color)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCartCard() {
+    return _styledCard(
+      child: Column(
+        children: [
+          // En-tête panier
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+            decoration: BoxDecoration(
+              color: _green.withValues(alpha: 0.08),
+              borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(14), topRight: Radius.circular(14)),
+            ),
+            child: Row(
+              children: [
+                Expanded(flex: 4,
+                    child: Text('Produit',
+                        style: TextStyle(fontWeight: FontWeight.w700, color: _green, fontSize: 13))),
+                Expanded(flex: 2,
+                    child: Text('Qté',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(fontWeight: FontWeight.w700, color: _green, fontSize: 13))),
+                Expanded(flex: 3,
+                    child: Text('Prix unit.',
+                        textAlign: TextAlign.right,
+                        style: TextStyle(fontWeight: FontWeight.w700, color: _green, fontSize: 13))),
+                Expanded(flex: 3,
+                    child: Text('Sous-total',
+                        textAlign: TextAlign.right,
+                        style: TextStyle(fontWeight: FontWeight.w700, color: _green, fontSize: 13))),
+                const SizedBox(width: 44),
+              ],
+            ),
+          ),
+          const Divider(height: 1),
+
+          if (panier.isEmpty)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 32),
+              child: Column(
+                children: [
+                  Icon(Icons.shopping_cart_outlined, size: 48, color: Colors.grey[300]),
+                  const SizedBox(height: 8),
+                  Text('Le panier est vide',
+                      style: TextStyle(color: Colors.grey[500], fontSize: 14)),
+                ],
+              ),
+            )
+          else
+            ListView.separated(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: panier.length,
+              separatorBuilder: (_, i) => const Divider(height: 1),
+              itemBuilder: (context, index) {
+                final item = panier[index];
+                final isEven = index.isEven;
+                return Container(
+                  color: isEven ? Colors.white : _bgLight,
+                  padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        flex: 4,
+                        child: Text(item['produit'],
+                            style: const TextStyle(fontWeight: FontWeight.w500)),
+                      ),
+                      Expanded(
+                        flex: 2,
+                        child: Container(
+                          margin: const EdgeInsets.symmetric(horizontal: 8),
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                          decoration: BoxDecoration(
+                            color: _accent.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Text(item['quantite'].toString(),
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(
+                                  fontWeight: FontWeight.w700, color: _accent)),
+                        ),
+                      ),
+                      Expanded(
+                        flex: 3,
+                        child: Text('${item["prixUnitaire"]}',
+                            textAlign: TextAlign.right,
+                            style: TextStyle(color: Colors.grey[700])),
+                      ),
+                      Expanded(
+                        flex: 3,
+                        child: Text(
+                          '${item["quantite"] * item["prixUnitaire"]}',
+                          textAlign: TextAlign.right,
+                          style: const TextStyle(
+                              fontWeight: FontWeight.w700, color: _green),
+                        ),
+                      ),
+                      SizedBox(
+                        width: 44,
+                        child: IconButton(
+                          icon: const Icon(Icons.delete_outline, color: Colors.red, size: 20),
+                          onPressed: () => setState(() => panier.removeAt(index)),
+                          tooltip: 'Retirer',
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+        ],
       ),
     );
   }
@@ -849,36 +892,53 @@ Future<void> addCommande() async {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text("Total à payer TTC : $total F",
-            textAlign: TextAlign.right,
-            style: Theme.of(context)
-                .textTheme
-                .titleMedium
-                ?.copyWith(fontWeight: FontWeight.bold)),
-        const SizedBox(height: 24),
-        FilledButton.icon(
-          icon: const Icon(Icons.check_circle_outline),
-          label: const Text("Valider la commande et Facturer"),
-          onPressed: () async {
-              await addCommande();
-              setState(() {
-                panier.clear();
-                _clientController.clear();
-                _produitController.clear();
-                _dateController.text = "";
-                produitDetails = null;
-                selectedClient = null;
-                selectedSection = null;
-              });
-            
-          },
-          style: FilledButton.styleFrom(
-            backgroundColor: Colors.green,
+        // Bandeau total
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+          decoration: BoxDecoration(
+            color: _primary,
+            borderRadius: BorderRadius.circular(14),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text('TOTAL À PAYER',
+                  style: TextStyle(
+                      color: Colors.white, fontWeight: FontWeight.w600, fontSize: 14)),
+              Text('${total.toStringAsFixed(2)} CDF',
+                  style: const TextStyle(
+                      color: Colors.white, fontWeight: FontWeight.w800, fontSize: 20)),
+            ],
+          ),
+        ),
+        const SizedBox(height: 14),
+
+        // Bouton valider
+        ElevatedButton.icon(
+          icon: const Icon(Icons.check_circle_outline, size: 22),
+          label: const Text('Valider la commande et Facturer',
+              style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700)),
+          onPressed: panier.isEmpty
+              ? null
+              : () async {
+                  await addCommande();
+                  setState(() {
+                    panier.clear();
+                    _clientController.clear();
+                    _produitController.clear();
+                    _dateController.text = '';
+                    produitDetails = null;
+                    selectedClient = null;
+                    selectedSection = null;
+                  });
+                },
+          style: ElevatedButton.styleFrom(
+            backgroundColor: _green,
             foregroundColor: Colors.white,
-            padding: const EdgeInsets.symmetric(vertical: 16),
-            textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            disabledBackgroundColor: Colors.grey[300],
+            padding: const EdgeInsets.symmetric(vertical: 18),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            elevation: 3,
           ),
         ),
       ],

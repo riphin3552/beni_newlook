@@ -1,3 +1,4 @@
+// ignore_for_file: camel_case_types
 import 'dart:convert';
 import 'package:beni_newlook/Rapports/Facturelogement.dart';
 import 'package:flutter/material.dart';
@@ -179,7 +180,7 @@ class _FacturesLogement_dateState extends State<FacturesLogement_date> {
                             scrollDirection: Axis.horizontal,
                             child: SingleChildScrollView(
                               child: DataTable(
-                                headingRowColor: WidgetStateProperty.all(const Color.fromARGB(255, 121, 169, 240).withOpacity(0.15)),
+                                headingRowColor: WidgetStateProperty.all(const Color.fromARGB(255, 121, 169, 240).withValues(alpha: 0.15)),
                                 columns: const [
                                   DataColumn(label: Text("ID_Facture", style: TextStyle(fontWeight: FontWeight.bold))),
                                   DataColumn(label: Text("Date Facture ", style: TextStyle(fontWeight: FontWeight.bold))),

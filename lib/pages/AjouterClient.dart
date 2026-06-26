@@ -75,9 +75,8 @@ class _AjouterClientState extends State<AjouterClient> {
         });
 
         var responseData = jsonDecode(response.body);
-        print("body: ${response.body}");
-        print(responseData);
         if (responseData['success'] == true) {
+          if (!mounted) return;
           showDialog(
             context: context,
             builder: (BuildContext context) {
@@ -262,31 +261,31 @@ Future<List<dynamic>> fetchClients(int entrepriseId) async {
                                 ),
                               ),
                             ),
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: RadioListTile<String>(
-                                    title: const Text('Carte de lecteur', style: TextStyle(fontSize: 12)),
-                                    value: 'Carte de lecteur',
-                                    groupValue: _selectedTypePiece,
-                                    dense: true,
-                                    contentPadding: EdgeInsets.zero,
-                                    activeColor: const Color.fromARGB(255, 121, 169, 240),
-                                    onChanged: (value) => setState(() => _selectedTypePiece = value!),
+                            RadioGroup<String>(
+                              groupValue: _selectedTypePiece,
+                              onChanged: (value) => setState(() => _selectedTypePiece = value!),
+                              child: Row(
+                                children: [
+                                  Expanded(
+                                    child: RadioListTile<String>(
+                                      title: const Text('Carte de lecteur', style: TextStyle(fontSize: 12)),
+                                      value: 'Carte de lecteur',
+                                      dense: true,
+                                      contentPadding: EdgeInsets.zero,
+                                      activeColor: const Color.fromARGB(255, 121, 169, 240),
+                                    ),
                                   ),
-                                ),
-                                Expanded(
-                                  child: RadioListTile<String>(
-                                    title: const Text('Passport', style: TextStyle(fontSize: 12)),
-                                    value: 'Passport',
-                                    groupValue: _selectedTypePiece,
-                                    dense: true,
-                                    contentPadding: EdgeInsets.zero,
-                                    activeColor: const Color.fromARGB(255, 121, 169, 240),
-                                    onChanged: (value) => setState(() => _selectedTypePiece = value!),
+                                  Expanded(
+                                    child: RadioListTile<String>(
+                                      title: const Text('Passport', style: TextStyle(fontSize: 12)),
+                                      value: 'Passport',
+                                      dense: true,
+                                      contentPadding: EdgeInsets.zero,
+                                      activeColor: const Color.fromARGB(255, 121, 169, 240),
+                                    ),
                                   ),
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
                             const SizedBox(height: 16),
                             _buildTextField(_nationaliteController, "Nationalité", Icons.flag),
@@ -409,7 +408,7 @@ Future<List<dynamic>> fetchClients(int entrepriseId) async {
                         scrollDirection: Axis.horizontal,
                         child: DataTable(
                           headingRowColor: WidgetStateProperty.all(
-                              const Color.fromARGB(255, 121, 169, 240).withOpacity(0.15)),
+                              const Color.fromARGB(255, 121, 169, 240).withValues(alpha: 0.15)),
                           headingRowHeight: 56,
                           dataRowMaxHeight: 56,
                           border: TableBorder(

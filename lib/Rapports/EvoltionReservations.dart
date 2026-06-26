@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'package:beni_newlook/Rapports/Facturelogement.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
@@ -72,25 +71,6 @@ class _EvolutionReservationsState extends State<EvolutionReservations> {
   }
 
 
-  // Nouvelle méthode pour imprimer une facture existante
-  Future<void> _printFacture(Map<String, dynamic> facture) async {
-    try {
-      final entrepriseResponse = await http.post(
-        Uri.parse("https://riphin-salemanager.com/beni_newlook_API/AfficherInfos_Ese.php"),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({"idEse": widget.identreprise}),
-      );
-      final entrepriseData = jsonDecode(entrepriseResponse.body)['data'];
-
-      await generateThermalFacturePDF(entrepriseData, facture);
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Erreur lors de l'impression: $e"), backgroundColor: Colors.red),
-      );
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -153,7 +133,7 @@ class _EvolutionReservationsState extends State<EvolutionReservations> {
                             scrollDirection: Axis.horizontal,
                             child: SingleChildScrollView(
                               child: DataTable(
-                                headingRowColor: WidgetStateProperty.all(const Color.fromARGB(255, 121, 169, 240).withOpacity(0.15)),
+                                headingRowColor: WidgetStateProperty.all(const Color.fromARGB(255, 121, 169, 240).withValues(alpha: 0.15)),
                                 columns: const [
                                   DataColumn(label: Text("ID_Reservation", style: TextStyle(fontWeight: FontWeight.bold))),
                                   DataColumn(label: Text("Date Reservation", style: TextStyle(fontWeight: FontWeight.bold))),

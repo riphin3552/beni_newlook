@@ -34,16 +34,10 @@ class _SortieCaisseState extends State<SortieCaisse> {
   late TextEditingController _filterEndDateController;
 
   late Future<List<dynamic>> _mouvementsFuture;
-  String? _selectedDestination;
+  List<Map<String, dynamic>> _typeCharges = [];
+  int? _selectedIdCharge;
   String? _selectedModePaiement;
   bool _isLoading = false;
-
-  static const List<String> _destinations = [
-    'CHARGES SECTION BAR',
-    'CHARGES SECTION RESTAURANT',
-    'CHARGES SECTION HEBERGEMENT',
-    'CHARGES SECTION PISCINE',
-  ];
 
   static const List<String> _modesPaiement = [
     'Espèces',
@@ -63,6 +57,24 @@ class _SortieCaisseState extends State<SortieCaisse> {
     _filterStartDateController = TextEditingController();
     _filterEndDateController = TextEditingController();
     _mouvementsFuture = fetchSortiesCaisse();
+    _loadTypeCharges();
+  }
+
+  Future<void> _loadTypeCharges() async {
+    final url = Uri.parse('https://riphin-salemanager.com/beni_newlook_API/AfficherTypeCharges.php');
+    try {
+      final response = await http.post(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'entreprise': widget.identreprise}),
+      );
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        if (data is List && mounted) {
+          setState(() => _typeCharges = List<Map<String, dynamic>>.from(data));
+        }
+      }
+    } catch (_) {}
   }
 
   Future<List<dynamic>> fetchSortiesCaisse() async {
@@ -216,7 +228,7 @@ class _SortieCaisseState extends State<SortieCaisse> {
                 mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                 children: [
                   pw.Expanded(
-                    child: _buildInfoBox(fontBold, 'DESTINATION', mvt['DestionationDecaissement'] ?? 'N/A'),
+                    child: _buildInfoBox(fontBold, 'TYPE DE CHARGE', mvt['DesignationCharge'] ?? 'N/A'),
                   ),
                   pw.SizedBox(width: 10),
                   pw.Expanded(
@@ -403,7 +415,7 @@ class _SortieCaisseState extends State<SortieCaisse> {
     _descriptionController.clear();
     _beneficiaireController.clear();
     setState(() {
-      _selectedDestination = null;
+      _selectedIdCharge = null;
       _selectedModePaiement = null;
     });
   }
@@ -501,14 +513,12 @@ class _SortieCaisseState extends State<SortieCaisse> {
         body: jsonEncode({
           'dateoperation': _dateController.text,
           'montant': montant,
-          'provenance': "",
-          'destinationDecaissement': _selectedDestination,
+          'idCharge': _selectedIdCharge,
           'modepaiement': _selectedModePaiement,
           'referenceExterne': _refExtController.text,
           'BeneficiaireOUdeposant': _beneficiaireController.text,
           'descriptionMouvement': _descriptionController.text,
           'idutilisateur': widget.idUtilisateur,
-          'typeoperation': 'Sortie Caisse',
           'entreprise': widget.identreprise,
         }),
       );
@@ -636,21 +646,24 @@ class _SortieCaisseState extends State<SortieCaisse> {
     return Row(
       children: [
         Expanded(
-          child: DropdownButtonFormField<String>(
-            initialValue: _selectedDestination,
+          child: DropdownButtonFormField<int>(
+            initialValue: _selectedIdCharge,
             decoration: InputDecoration(
-              labelText: "Destination décaissement",
-              prefixIcon: const Icon(Icons.send, color: _primaryColorSortie),
+              labelText: "Type de charge",
+              prefixIcon: const Icon(Icons.category_outlined, color: _primaryColorSortie),
               border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
                 borderSide: const BorderSide(color: _primaryColorSortie, width: 2),
               ),
             ),
-            items: _destinations
-                .map((val) => DropdownMenuItem(value: val, child: Text(val, overflow: TextOverflow.ellipsis)))
-                .toList(),
-            onChanged: (value) => setState(() => _selectedDestination = value),
+            items: _typeCharges.map((tc) => DropdownMenuItem<int>(
+              value: tc['IdCharge'] is int
+                  ? tc['IdCharge'] as int
+                  : int.tryParse(tc['IdCharge'].toString()),
+              child: Text(tc['DesignationCharge']?.toString() ?? '', overflow: TextOverflow.ellipsis),
+            )).toList(),
+            onChanged: (value) => setState(() => _selectedIdCharge = value),
             validator: (value) => value == null ? 'Ce champ est requis' : null,
           ),
         ),
@@ -786,7 +799,7 @@ class _SortieCaisseState extends State<SortieCaisse> {
                   DataColumn(label: Text("ID", style: TextStyle(fontWeight: FontWeight.bold, color: _primaryColorSortie))),
                   DataColumn(label: Text("Date", style: TextStyle(fontWeight: FontWeight.bold, color: _primaryColorSortie))),
                   DataColumn(label: Text("Montant", style: TextStyle(fontWeight: FontWeight.bold, color: _primaryColorSortie))),
-                  DataColumn(label: Text("Destination", style: TextStyle(fontWeight: FontWeight.bold, color: _primaryColorSortie))),
+                  DataColumn(label: Text("Type de charge", style: TextStyle(fontWeight: FontWeight.bold, color: _primaryColorSortie))),
                   DataColumn(label: Text("Mode paiement", style: TextStyle(fontWeight: FontWeight.bold, color: _primaryColorSortie))),
                   DataColumn(label: Text("Description", style: TextStyle(fontWeight: FontWeight.bold, color: _primaryColorSortie))),
                   DataColumn(label: Text("Réf. Ext.", style: TextStyle(fontWeight: FontWeight.bold, color: _primaryColorSortie))),
@@ -805,7 +818,7 @@ class _SortieCaisseState extends State<SortieCaisse> {
                         "${mvt['montant'] ?? '0'} \$",
                         style: const TextStyle(fontWeight: FontWeight.bold),
                       )),
-                      DataCell(Text(mvt['DestionationDecaissement']?.toString() ?? '')),
+                      DataCell(Text(mvt['DesignationCharge']?.toString() ?? '')),
                       DataCell(Text(mvt['Modepaiement']?.toString() ?? '')),
                       DataCell(
                         SizedBox(

@@ -19,7 +19,6 @@ class _ChambreespacehorsServiceState extends State<ChambreespacehorsService> {
   final TextEditingController _dateDebutController = TextEditingController();
   final TextEditingController _dateFinController = TextEditingController();
   DateTime? _selectedDateDebut;
-  DateTime? _selectedDateFin;
   late Future<List<dynamic>> _futureHorsService;
 
 
@@ -73,7 +72,6 @@ class _ChambreespacehorsServiceState extends State<ChambreespacehorsService> {
       _dateDebutController.clear();
       _dateFinController.clear();
       _selectedDateDebut = null;
-      _selectedDateFin = null;
     });
   }
   
@@ -308,7 +306,6 @@ class _ChambreespacehorsServiceState extends State<ChambreespacehorsService> {
                                   );
                                   if (pickedDate != null) {
                                     setState(() {
-                                      _selectedDateFin = pickedDate;
                                       _dateFinController.text = "${pickedDate.toLocal()}".split(' ')[0];
                                     });
                                   }
@@ -397,7 +394,7 @@ class _ChambreespacehorsServiceState extends State<ChambreespacehorsService> {
                           child: ConstrainedBox(
                             constraints: BoxConstraints(minWidth: constraints.maxWidth),
                             child: DataTable(
-                              headingRowColor: WidgetStateProperty.all(const Color.fromARGB(255, 121, 169, 240).withOpacity(0.15)),
+                              headingRowColor: WidgetStateProperty.all(const Color.fromARGB(255, 121, 169, 240).withValues(alpha: 0.15)),
                               headingRowHeight: 56,
                               horizontalMargin: 24,
                               border: TableBorder(

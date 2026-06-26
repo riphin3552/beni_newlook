@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
-import 'dart:convert';
-
 const Color _primaryColor = Color.fromARGB(255, 121, 169, 240);
 const Color _lightGrey = Color.fromARGB(255, 245, 248, 255);
 
@@ -272,8 +270,6 @@ Future<pw.Document> buildFactureDocument(
     (sum, d) => sum + (num.tryParse(d["totalPayer"].toString()) ?? 0),
   );
   final dateFacturation = facture["datecommande"]?.toString().split(' ')[0] ?? "";
-  final numRefSolide = "FAC/${facture['IdFacture']}/$dateFacturation";
-
   pdf.addPage(
     pw.Page(
       pageFormat: const PdfPageFormat(80 * PdfPageFormat.mm, double.infinity),
@@ -415,7 +411,7 @@ Future<pw.Document> buildFactureDocument(
                       pw.Padding(
                         padding: const pw.EdgeInsets.all(3),
                         child: pw.Text(
-                          '${totalTTC.toStringAsFixed(2)}',
+                          totalTTC.toStringAsFixed(2),
                           style: pw.TextStyle(font: fontBold, fontSize: 8, color: PdfColor.fromHex('1F3A93')),
                           textAlign: pw.TextAlign.right,
                         ),

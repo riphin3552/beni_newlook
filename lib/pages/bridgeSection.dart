@@ -34,7 +34,7 @@ class _BridgeSectionState extends State<BridgeSection> {
               decoration: BoxDecoration(
                 border: Border(
                   bottom: BorderSide(
-                    color: primaryColor.withOpacity(0.2),
+                    color: primaryColor.withValues(alpha:0.2),
                     width: 2,
                   ),
                 ),
@@ -44,7 +44,7 @@ class _BridgeSectionState extends State<BridgeSection> {
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: primaryColor.withOpacity(0.1),
+                      color: primaryColor.withValues(alpha:0.1),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Icon(
@@ -168,13 +168,13 @@ class _BridgeSectionState extends State<BridgeSection> {
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
-                color: color.withOpacity(isHovered ? 0.25 : 0.08),
+                color: color.withValues(alpha:isHovered ? 0.25 : 0.08),
                 blurRadius: isHovered ? 20 : 8,
                 offset: Offset(0, isHovered ? 8 : 4),
               ),
             ],
             border: Border.all(
-              color: isHovered ? color.withOpacity(0.5) : Colors.grey[200]!,
+              color: isHovered ? color.withValues(alpha:0.5) : Colors.grey[200]!,
               width: isHovered ? 2 : 1,
             ),
           ),
@@ -191,7 +191,7 @@ class _BridgeSectionState extends State<BridgeSection> {
                     duration: const Duration(milliseconds: 300),
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: color.withOpacity(isHovered ? 0.15 : 0.08),
+                      color: color.withValues(alpha:isHovered ? 0.15 : 0.08),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Icon(

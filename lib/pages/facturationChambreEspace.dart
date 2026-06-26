@@ -1,6 +1,5 @@
 import 'dart:convert';
 
-import 'package:beni_newlook/Rapports/EvoltionReservations.dart';
 import 'package:beni_newlook/pages/factureslogement_date.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -109,56 +108,6 @@ class _FacturationchambreEspaceState extends State<FacturationchambreEspace> {
     );
   }
 
-  Future<void> _submitFacturation() async {
-    if (!_formKey.currentState!.validate()) return;
-    if (_selectedReservationId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Veuillez d'abord sélectionner une réservation dans le tableau"), backgroundColor: Colors.orange),
-      );
-      return;
-    }
-
-    setState(() => _isSubmitting = true);
-    
-    try {
-      // Simulated API Call
-      await Future.delayed(const Duration(seconds: 1));
-      
-      if (!mounted) return;
-      showDialog(
-        context: context,
-        builder: (context) => AlertDialog(
-          icon: const Icon(Icons.check_circle, color: Colors.green, size: 48),
-          title: const Text("Succès"),
-          content: const Text("Facturation enregistrée avec succès"),
-          actions: [
-            TextButton(
-              onPressed: () {
-                //Navigator.pop(context);
-                Navigator.push(context, MaterialPageRoute(builder: (context) => FacturesLogement_date(identreprise: widget.identreprise)));
-                _formKey.currentState!.reset();
-                setState(() {
-                  _selectedReservationId = null;
-                  selectedEspaceId = null;
-                  _clientController.clear();
-                  _acompteController.clear();
-                  _espaceController.clear();
-                  _totalController.clear();
-                });
-              },
-              child: const Text("OK"),
-            ),
-          ],
-        ),
-      );
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Erreur: $e"), backgroundColor: Colors.red),
-      );
-    } finally {
-      setState(() => _isSubmitting = false);
-    }
-  }
 
   // Fetch the list of reservations to display in the table
   Future<List<dynamic>> displayReservations() async {
@@ -251,6 +200,7 @@ class _FacturationchambreEspaceState extends State<FacturationchambreEspace> {
           );
         } else {
           // ✅ Erreur côté API
+          if (!mounted) return;
           showDialog(
             context: context,
             builder: (context) => AlertDialog(
@@ -502,7 +452,7 @@ class _FacturationchambreEspaceState extends State<FacturationchambreEspace> {
                           child: ConstrainedBox(
                             constraints: BoxConstraints(minWidth: constraints.maxWidth),
                             child: DataTable(
-                              headingRowColor: WidgetStateProperty.all(const Color.fromARGB(255, 121, 169, 240).withOpacity(0.15)),
+                              headingRowColor: WidgetStateProperty.all(const Color.fromARGB(255, 121, 169, 240).withValues(alpha: 0.15)),
                               headingRowHeight: 56,
                               // ignore: deprecated_member_use
                               dataRowHeight: 48,

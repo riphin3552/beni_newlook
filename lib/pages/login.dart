@@ -137,7 +137,7 @@ class _LoginState extends State<Login> {
                           children: [
                             CircleAvatar(
                               radius: 60,
-                              backgroundColor: Color.fromARGB(255, 121, 169, 240).withOpacity(0.1),
+                              backgroundColor: Color.fromARGB(255, 121, 169, 240).withValues(alpha: 0.1),
                               backgroundImage: AssetImage('lib/images/logoHB.jpeg'),
                             ),
                             SizedBox(height: 24),

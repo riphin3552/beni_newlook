@@ -54,8 +54,6 @@ class _IdentificationproduitState extends State<Identificationproduit> {
         setState(() {
           categoryProduits=List<Map<String, dynamic>>.from(data);
         });
-        print("id entreprise dans category produit: ${widget.identreprise}");
-        print(categoryProduits);
       }
   }
 

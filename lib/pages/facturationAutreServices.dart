@@ -485,9 +485,10 @@ Future<void> fetchSectionsauxriliaires(int entrepriseId) async {
                       child: DataTable(
                         headingRowColor: WidgetStateProperty.all(
                             const Color.fromARGB(255, 121, 169, 240)
-                                .withOpacity(0.15)),
+                                .withValues(alpha: 0.15)),
                         headingRowHeight: 56,
-                        dataRowHeight: 48,
+                        dataRowMinHeight: 48,
+                        dataRowMaxHeight: 48,
                         border: TableBorder(
                           horizontalInside:
                               BorderSide(color: Colors.grey[300]!),

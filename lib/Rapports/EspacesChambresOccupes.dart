@@ -78,7 +78,6 @@ Future<EntrepriseInfos> fetchEntreprise(int idEse) async {
     headers: {"Content-Type": "application/json"},
     body: jsonEncode({"idEse": idEse}),
   );
-  print("DEBUG (Entreprise API): ${response.body}");
   final data = jsonDecode(response.body);
   return EntrepriseInfos.fromJson(data['data']);
 }

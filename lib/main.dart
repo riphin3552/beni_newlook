@@ -13,6 +13,7 @@ import 'package:beni_newlook/TypesStock.dart';
 import 'package:beni_newlook/pages/MenuLogement.dart';
 import 'package:beni_newlook/pages/MenuCaisse.dart';
 import 'package:beni_newlook/pages/MenuFacturation.dart';
+import 'package:beni_newlook/pages/MenuRapports.dart';
 import 'package:beni_newlook/pages/TypeProduit.dart';
 import 'package:beni_newlook/pages/Utilisateurs.dart';
 import 'package:beni_newlook/pages/bridgeSection.dart';
@@ -137,7 +138,7 @@ class _MainMenuState extends State<MainMenu> {
       case 8:
         return const _Page(title: 'Fournisseurs');
       case 9:
-        return const _Page(title: 'Rapports');
+        return MenuRapports(titreMenuRapports: 'Rapports', identreprise: widget.identreprise, idUtilisateur: idUtilisateur);
       case 10:
         return  ParametresMenu(titreMenuParametres: 'Paramètres',identreprise: widget.identreprise);
       default:
@@ -1134,6 +1135,8 @@ class CommandesMenu extends StatefulWidget {
 }
 
 class _CommandesMenuState extends State<CommandesMenu> {
+  static const Color _primary = Color(0xFF0D47A1);
+  static const Color _accentBlue = Color(0xFF1976D2);
 
   late Future<List<Map<String, dynamic>>> _futureCommandes;
 
@@ -1143,15 +1146,14 @@ class _CommandesMenuState extends State<CommandesMenu> {
     _futureCommandes = fetchCommandes();
   }
 
-
   Future<List<Map<String, dynamic>>> fetchCommandes() async {
-    var url = Uri.parse("https://riphin-salemanager.com/beni_newlook_API/afficherCommandes.php");
+    var url = Uri.parse(
+        "https://riphin-salemanager.com/beni_newlook_API/afficherCommandes.php");
     var response = await http.post(
       url,
       headers: {'Content-Type': 'application/json'},
       body: json.encode({"entreprise": widget.identreprise}),
     );
-
     if (response.statusCode == 200) {
       var data = json.decode(response.body);
       if (data['success']) {
@@ -1164,126 +1166,350 @@ class _CommandesMenuState extends State<CommandesMenu> {
     }
   }
 
+  void _refresh() => setState(() => _futureCommandes = fetchCommandes());
+
+  void _ouvrirCommande() {
+    showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        child: SizedBox(
+          width: 850,
+          height: 650,
+          child: CommandePage(idEntreprise: widget.identreprise),
+        ),
+      ),
+    ).then((_) => _refresh());
+  }
+
+  Color _statutColor(String? statut) {
+    switch ((statut ?? '').toLowerCase()) {
+      case 'livré':
+      case 'livre':
+        return const Color(0xFF388E3C);
+      case 'en attente':
+        return const Color(0xFFF57C00);
+      case 'annulé':
+      case 'annule':
+        return const Color(0xFFD32F2F);
+      default:
+        return const Color(0xFF1976D2);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // 👇 Titre + IconButtons sur la même ligne
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                widget.titreMenuCommandes,
-                style: Theme.of(context).textTheme.titleLarge,
+          // ── En-tête (même style que MenuCaisse) ──
+          Container(
+            padding: const EdgeInsets.only(bottom: 20),
+            decoration: BoxDecoration(
+              border: Border(
+                bottom: BorderSide(
+                  // ignore: deprecated_member_use
+                  color: _primary.withOpacity(0.2),
+                  width: 2,
+                ),
               ),
-              Row(
-                children: [
-                  FilledButton.icon(
-                    icon: const Icon(Icons.add_shopping_cart, size: 30, color: Colors.blue),
-                    label: const Text("Passez une commande"),
-                    onPressed: () {
-                      showDialog(
-                        context: context,
-                        builder: (BuildContext context) {
-                          return Dialog(
-                            child: SizedBox(
-                              width: 850,
-                              height: 650,
-                              child: CommandePage(idEntreprise: widget.identreprise),
-                            ),
-                          );
-                        },
-                      );
-                    },
+            ),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    // ignore: deprecated_member_use
+                    color: _primary.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
                   ),
-                  
-                ],
-              ),
-            ],
+                  child: const Icon(
+                    Icons.shopping_cart_outlined,
+                    color: _primary,
+                    size: 28,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        widget.titreMenuCommandes,
+                        style:
+                            Theme.of(context).textTheme.headlineSmall?.copyWith(
+                                  fontWeight: FontWeight.w700,
+                                  color: _primary,
+                                ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Suivi et gestion des commandes clients',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: Colors.grey[600],
+                            ),
+                      ),
+                    ],
+                  ),
+                ),
+                // Boutons d'action
+                ElevatedButton.icon(
+                  onPressed: _ouvrirCommande,
+                  icon: const Icon(Icons.add_shopping_cart_outlined, size: 18),
+                  label: const Text('Nouvelle commande'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: _accentBlue,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 20, vertical: 14),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10)),
+                    elevation: 2,
+                  ),
+                ),
+                const SizedBox(width: 10),
+                IconButton(
+                  onPressed: _refresh,
+                  tooltip: 'Actualiser',
+                  icon: const Icon(Icons.refresh_rounded, color: _primary),
+                  style: IconButton.styleFrom(
+                    // ignore: deprecated_member_use
+                    backgroundColor: _primary.withOpacity(0.08),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10)),
+                  ),
+                ),
+              ],
+            ),
           ),
+          const SizedBox(height: 24),
 
-          const SizedBox(height: 16),
-
+          // ── Tableau ──
           Expanded(
-            child: Container(
-              decoration: BoxDecoration(
-                color: Colors.white,
-                border: Border.all(color: Theme.of(context).dividerColor),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child:  FutureBuilder<List<Map<String, dynamic>>>(
-                future: _futureCommandes,
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const Center(child: CircularProgressIndicator());
-                  } else if (snapshot.hasError) {
-                    return Center(child: Text("Erreur: ${snapshot.error}"));
-                  } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                    return const Center(child: Text("Aucune commande trouvée"));
-                  }
+            child: FutureBuilder<List<Map<String, dynamic>>>(
+              future: _futureCommandes,
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(
+                    child: CircularProgressIndicator(color: _primary),
+                  );
+                }
+                if (snapshot.hasError) {
+                  return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.error_outline,
+                            size: 56, color: Colors.red[300]),
+                        const SizedBox(height: 12),
+                        Text('Erreur : ${snapshot.error}',
+                            style: const TextStyle(color: Colors.red)),
+                        const SizedBox(height: 16),
+                        ElevatedButton.icon(
+                          onPressed: _refresh,
+                          icon: const Icon(Icons.refresh),
+                          label: const Text('Réessayer'),
+                          style: ElevatedButton.styleFrom(
+                              backgroundColor: _primary,
+                              foregroundColor: Colors.white),
+                        ),
+                      ],
+                    ),
+                  );
+                }
+                if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                  return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.shopping_cart_outlined,
+                            size: 64, color: Colors.grey[300]),
+                        const SizedBox(height: 16),
+                        Text('Aucune commande trouvée',
+                            style: TextStyle(
+                                color: Colors.grey[500], fontSize: 15)),
+                        const SizedBox(height: 20),
+                        ElevatedButton.icon(
+                          onPressed: _ouvrirCommande,
+                          icon: const Icon(Icons.add),
+                          label: const Text('Passer une commande'),
+                          style: ElevatedButton.styleFrom(
+                              backgroundColor: _accentBlue,
+                              foregroundColor: Colors.white),
+                        ),
+                      ],
+                    ),
+                  );
+                }
 
-                  final commandes = snapshot.data!;
+                final commandes = snapshot.data!;
 
-                  return Padding(
-                    padding: const EdgeInsets.all(12),
-                    child: SingleChildScrollView(
-                      scrollDirection: Axis.vertical,
-                      child: SizedBox(
+                return Card(
+                  elevation: 3,
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14)),
+                  child: Column(
+                    children: [
+                      // Bandeau compteur
+                      Container(
                         width: double.infinity,
-                        child: DataTable(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 20, vertical: 10),
+                        decoration: BoxDecoration(
                           // ignore: deprecated_member_use
-                          headingRowColor: WidgetStateProperty.all(Color.fromARGB(255, 121, 169, 240).withOpacity(0.15)),
-                          headingRowHeight: 56,
-                          // ignore: deprecated_member_use
-                          dataRowHeight: 56,
-                          columnSpacing: 16,
-                          border: TableBorder(
-                            horizontalInside: BorderSide(color: Colors.grey[300]!),
-                            bottom: BorderSide(color: Colors.grey[300]!),
-                            top: BorderSide(color: Colors.grey[300]!),
-                          ),
-                          columns: const [
-                            DataColumn(label: Text("ID", style: TextStyle(fontWeight: FontWeight.bold, color: Color.fromARGB(255, 121, 169, 240)))),
-                            DataColumn(label: Text("Date", style: TextStyle(fontWeight: FontWeight.bold, color: Color.fromARGB(255, 121, 169, 240)))),
-                            DataColumn(label: Text("Client", style: TextStyle(fontWeight: FontWeight.bold, color: Color.fromARGB(255, 121, 169, 240)))),
-                            DataColumn(label: Text("Produit", style: TextStyle(fontWeight: FontWeight.bold, color: Color.fromARGB(255, 121, 169, 240)))),
-                            DataColumn(label: Text("PU", style: TextStyle(fontWeight: FontWeight.bold, color: Color.fromARGB(255, 121, 169, 240)))),
-                            DataColumn(label: Text("Qté", style: TextStyle(fontWeight: FontWeight.bold, color: Color.fromARGB(255, 121, 169, 240)))),
-                            DataColumn(label: Text("Prix total", style: TextStyle(fontWeight: FontWeight.bold, color: Color.fromARGB(255, 121, 169, 240)))),
-                            DataColumn(label: Text("Statut", style: TextStyle(fontWeight: FontWeight.bold, color: Color.fromARGB(255, 121, 169, 240)))),
-                            DataColumn(label: Text("Section", style: TextStyle(fontWeight: FontWeight.bold, color: Color.fromARGB(255, 121, 169, 240)))),
-                          ],
-                          rows: commandes.asMap().entries.map((entry) {
-                            int index = entry.key;
-                            dynamic commande = entry.value;
-                            return DataRow(
-                              color: WidgetStateProperty.all(
-                                index.isEven ? Colors.white : Color.fromARGB(255, 245, 248, 255),
-                              ),
-                              cells: [
-                                  DataCell(Text(commande['Idcommande'].toString())),
-                                  DataCell(Text(commande['datecommande'] ?? '')),
-                                  DataCell(Text(commande['client_name'] ?? '')),
-                                  DataCell(Text(commande['designationProduit'] ?? '')),
-                                  DataCell(Text(commande['prixUnitiare'].toString())),
-                                  DataCell(Text(commande['Quantite'].toString())),
-                                  DataCell(Text(commande['totalPayer'].toString())),
-                                  DataCell(Text(commande['statut'] ?? '')),
-                                  DataCell(Text(commande['descptionSection'] ?? '')),
-
-                                ],
-                              );
-                            }).toList(),
+                          color: _primary.withOpacity(0.06),
+                          borderRadius: const BorderRadius.only(
+                            topLeft: Radius.circular(14),
+                            topRight: Radius.circular(14),
                           ),
                         ),
-                      )
-                    );
-                },
-              ),
+                        child: Text(
+                          '${commandes.length} commande(s)',
+                          style: TextStyle(
+                            color: _primary,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 13,
+                          ),
+                        ),
+                      ),
+                      const Divider(height: 1),
+
+                      // Table scrollable
+                      Expanded(
+                        child: SingleChildScrollView(
+                          child: SingleChildScrollView(
+                            scrollDirection: Axis.horizontal,
+                            child: DataTable(
+                              headingRowColor: WidgetStateProperty.all(
+                                  // ignore: deprecated_member_use
+                                  _primary.withOpacity(0.1)),
+                              headingRowHeight: 52,
+                              // ignore: deprecated_member_use
+                              dataRowHeight: 50,
+                              columnSpacing: 20,
+                              border: TableBorder(
+                                horizontalInside:
+                                    BorderSide(color: Colors.grey[200]!),
+                              ),
+                              columns: const [
+                                DataColumn(
+                                    label: Text('ID',
+                                        style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            color: _primary))),
+                                DataColumn(
+                                    label: Text('Date',
+                                        style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            color: _primary))),
+                                DataColumn(
+                                    label: Text('Client',
+                                        style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            color: _primary))),
+                                DataColumn(
+                                    label: Text('Produit',
+                                        style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            color: _primary))),
+                                DataColumn(
+                                    label: Text('PU',
+                                        style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            color: _primary))),
+                                DataColumn(
+                                    label: Text('Qté',
+                                        style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            color: _primary))),
+                                DataColumn(
+                                    label: Text('Total',
+                                        style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            color: _primary))),
+                                DataColumn(
+                                    label: Text('Statut',
+                                        style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            color: _primary))),
+                                DataColumn(
+                                    label: Text('Section',
+                                        style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            color: _primary))),
+                              ],
+                              rows: commandes.asMap().entries.map((entry) {
+                                final i = entry.key;
+                                final c = entry.value;
+                                final statut = c['statut']?.toString() ?? '';
+                                final statutColor = _statutColor(statut);
+                                return DataRow(
+                                  color: WidgetStateProperty.all(
+                                    i.isEven
+                                        ? Colors.white
+                                        : const Color(0xFFF5F8FF),
+                                  ),
+                                  cells: [
+                                    DataCell(Text(
+                                      c['Idcommande']?.toString() ?? '',
+                                      style: const TextStyle(
+                                          fontWeight: FontWeight.w600,
+                                          color: _primary),
+                                    )),
+                                    DataCell(Text(
+                                        c['datecommande']?.toString() ?? '')),
+                                    DataCell(Text(
+                                        c['client_name']?.toString() ?? '')),
+                                    DataCell(Text(
+                                      c['designationProduit']?.toString() ??
+                                          '',
+                                      style: const TextStyle(
+                                          fontWeight: FontWeight.w500),
+                                    )),
+                                    DataCell(Text(
+                                        c['prixUnitiare']?.toString() ?? '')),
+                                    DataCell(Text(
+                                        c['Quantite']?.toString() ?? '')),
+                                    DataCell(Text(
+                                      c['totalPayer']?.toString() ?? '',
+                                      style: const TextStyle(
+                                          fontWeight: FontWeight.w700),
+                                    )),
+                                    DataCell(
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 10, vertical: 4),
+                                        decoration: BoxDecoration(
+                                          color:
+                                              statutColor.withValues(alpha: 0.12),
+                                          borderRadius:
+                                              BorderRadius.circular(20),
+                                        ),
+                                        child: Text(
+                                          statut,
+                                          style: TextStyle(
+                                            color: statutColor,
+                                            fontWeight: FontWeight.w600,
+                                            fontSize: 12,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                    DataCell(Text(
+                                        c['descptionSection']?.toString() ??
+                                            '')),
+                                  ],
+                                );
+                              }).toList(),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
             ),
           ),
         ],

@@ -323,7 +323,7 @@ class _SectionauxiliaireState extends State<Sectionauxiliaire> {
                             child: ConstrainedBox(
                               constraints: BoxConstraints(minWidth: constraints.maxWidth),
                               child: DataTable(
-                                headingRowColor: WidgetStateProperty.all(const Color.fromARGB(255, 121, 169, 240).withOpacity(0.15)),
+                                headingRowColor: WidgetStateProperty.all(const Color.fromARGB(255, 121, 169, 240).withValues(alpha: 0.15)),
                                 headingRowHeight: 56,
                                 // ignore: deprecated_member_use
                                 dataRowHeight: 48,

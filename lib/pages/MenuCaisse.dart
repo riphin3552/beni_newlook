@@ -1,6 +1,8 @@
 import 'package:beni_newlook/pages/EntreeCaisse.dart';
 import 'package:beni_newlook/pages/LivreCaisse.dart';
+import 'package:beni_newlook/pages/RecouvrementCreances.dart';
 import 'package:beni_newlook/pages/SortieCaisse.dart';
+import 'package:beni_newlook/pages/TypeCharge.dart';
 import 'package:flutter/material.dart';
 
 class MenuCaisse extends StatefulWidget {
@@ -135,7 +137,14 @@ class _MenuCaisseState extends State<MenuCaisse> {
                     description: 'Suivi des paiements',
                     color: const Color(0xFF1976D2),
                     onTap: () {
-                      // Action pour Recouvrement creances
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => RecouvrementCreances(
+                            identreprise: widget.identreprise,
+                          ),
+                        ),
+                      );
                     },
                   ),
                   _buildSmartCard(
@@ -152,6 +161,24 @@ class _MenuCaisseState extends State<MenuCaisse> {
                           builder: (context) => LivreCaisse(
                             identreprise: widget.identreprise,
                             idUtilisateur: widget.idUtilisateur,
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                  _buildSmartCard(
+                    context,
+                    index: 4,
+                    icon: Icons.category_outlined,
+                    title: 'Types de charges',
+                    description: 'Gérer les types de charges',
+                    color: const Color(0xFF7B1FA2),
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => TypeCharge(
+                            identreprise: widget.identreprise,
                           ),
                         ),
                       );

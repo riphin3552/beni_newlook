@@ -98,7 +98,6 @@ class _EntrepriseState extends State<Entreprise> {
                     Navigator.of(context).pop(); // Ferme la boîte de dialogue
                     // On récupère l'ID retourné par l'API (souvent sous la clé 'id')
                     int enterpriseId = int.tryParse(data['data']['Id_Ese']?.toString() ?? '0') ?? 0;
-                    print("ID de l'entreprise créée: $enterpriseId"); // Pour le débogage
                     Navigator.push(
                       context,
                       MaterialPageRoute(

@@ -330,21 +330,17 @@ Future<Map<String, dynamic>> cloturerReservations() async {
       final Map<String, dynamic> data = jsonDecode(response.body);
 
       if (data["success"] == true) {
-        print("✅ ${data["message"]}");
         return data;
       } else {
-        print("❌ Erreur API : ${data["error"]}");
         return data;
       }
     } else {
-      print("❌ Erreur HTTP : ${response.statusCode}");
       return {
         "success": false,
         "error": "Erreur HTTP ${response.statusCode}"
       };
     }
   } catch (e) {
-    print("❌ Exception : $e");
     return {
       "success": false,
       "error": "Erreur de connexion : $e"
@@ -616,17 +612,17 @@ Future<Map<String, dynamic>> cloturerReservations() async {
                 child: ElevatedButton.icon(
                   onPressed: _isLoading ? null : () async {
                     setState(() => _isLoading = true);
+                    final messenger = ScaffoldMessenger.of(context);
                     final result = await cloturerReservations();
                     if (!mounted) return;
                     setState(() => _isLoading = false);
-                    
                     if (result['success'] == true) {
-                      ScaffoldMessenger.of(context).showSnackBar(
+                      messenger.showSnackBar(
                         SnackBar(content: Text(result['message'] ?? "Mise à jour des statuts réussie")),
                       );
                       _refreshReservations();
                     } else {
-                      ScaffoldMessenger.of(context).showSnackBar(
+                      messenger.showSnackBar(
                         SnackBar(content: Text("Erreur : ${result['error']}"), backgroundColor: Colors.red),
                       );
                     }
@@ -682,9 +678,10 @@ Future<Map<String, dynamic>> cloturerReservations() async {
                             child: ConstrainedBox(
                               constraints: BoxConstraints(minWidth: constraints.maxWidth),
                               child: DataTable(
-                                headingRowColor: WidgetStateProperty.all(const Color.fromARGB(255, 121, 169, 240).withOpacity(0.15)),
+                                headingRowColor: WidgetStateProperty.all(const Color.fromARGB(255, 121, 169, 240).withValues(alpha: 0.15)),
                                 headingRowHeight: 56,
-                                dataRowHeight: 48,
+                                dataRowMinHeight: 48,
+                                dataRowMaxHeight: 48,
                                 horizontalMargin: 24,
                                 border: TableBorder(
                                   horizontalInside: BorderSide(color: Colors.grey[300]!),
@@ -716,9 +713,9 @@ Future<Map<String, dynamic>> cloturerReservations() async {
                                         Container(
                                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                                           decoration: BoxDecoration(
-                                            color: item['statutReservation'] == "Confirmée" 
-                                                ? Colors.green.withOpacity(0.1) 
-                                                : Colors.orange.withOpacity(0.1),
+                                            color: item['statutReservation'] == "Confirmée"
+                                                ? Colors.green.withValues(alpha: 0.1)
+                                                : Colors.orange.withValues(alpha: 0.1),
                                             borderRadius: BorderRadius.circular(4),
                                           ),
                                           child: Text(

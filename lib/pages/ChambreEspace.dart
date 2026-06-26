@@ -13,7 +13,7 @@ class Chambreespace extends StatefulWidget {
 }
 
 class _ChambreespaceState extends State<Chambreespace> {
-  List<Map<String, dynamic>> typesEspace_chambre = [];
+  List<Map<String, dynamic>> typesEspaceChambre = [];
   bool _isLoading = false;
   String? statutChambreEspaceSelectedSelected;
   int? idTypeEspaceSelected;
@@ -101,7 +101,7 @@ void resetForm() {
       if (response.statusCode == 200) {
         final List data = jsonDecode(response.body); // Assume API returns a list of sections
         setState(() {
-          typesEspace_chambre=List<Map<String, dynamic>>.from(data); // Convertir la liste dynamique en liste de maps
+          typesEspaceChambre=List<Map<String, dynamic>>.from(data); // Convertir la liste dynamique en liste de maps
         });
         //print(produits);
       }
@@ -290,7 +290,7 @@ void resetForm() {
                                   idTypeEspaceSelected = value;
                                 });
                               },
-                              items: typesEspace_chambre.map((espaceChambre) {
+                              items: typesEspaceChambre.map((espaceChambre) {
                                 return DropdownMenuItem<int>(
                                   value: espaceChambre['IdSectionAuxi'],
                                   child: Text(espaceChambre['designationSectionAuxi']),
@@ -397,7 +397,7 @@ void resetForm() {
                   label: const Text("Mettre hors service",
                       style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
                   style: TextButton.styleFrom(
-                    backgroundColor: Colors.redAccent.withOpacity(0.3),
+                    backgroundColor: Colors.redAccent.withValues(alpha: 0.3),
                   ),
                 ),
               ),
@@ -455,7 +455,7 @@ void resetForm() {
                             child: ConstrainedBox(
                               constraints: BoxConstraints(minWidth: constraints.maxWidth),
                               child: DataTable(
-                                headingRowColor: WidgetStateProperty.all(const Color.fromARGB(255, 121, 169, 240).withOpacity(0.15)),
+                                headingRowColor: WidgetStateProperty.all(const Color.fromARGB(255, 121, 169, 240).withValues(alpha: 0.15)),
                                 headingRowHeight: 56,
                                 // ignore: deprecated_member_use
                                 dataRowHeight: 48,
@@ -488,7 +488,7 @@ void resetForm() {
                                         Container(
                                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                                           decoration: BoxDecoration(
-                                            color: item['statutChambreEspace'] == "Disponible" ? Colors.green.withOpacity(0.1) : Colors.orange.withOpacity(0.1),
+                                            color: item['statutChambreEspace'] == "Disponible" ? Colors.green.withValues(alpha: 0.1) : Colors.orange.withValues(alpha: 0.1),
                                             borderRadius: BorderRadius.circular(4),
                                           ),
                                           child: Text(

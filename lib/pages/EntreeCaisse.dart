@@ -503,7 +503,6 @@ class _EntreecaisseState extends State<Entreecaisse> {
           'dateoperation': _dateController.text,
           'montant': double.tryParse(_montantController.text.replaceAll(',', '.')) ?? 0.0,
           'provenance': _selectedProvenance,
-          'DestinationDecaissement': "",
           'modepaiement': _selectedModePaiement,
           'referenceExterne': _refExtController.text,
           'BeneficiaireOUdeposant': _beneficiaireController.text,

@@ -67,7 +67,7 @@ class FactureLogementsPreviewPage extends StatelessWidget {
                           Container(
                             padding: const EdgeInsets.all(12),
                             decoration: BoxDecoration(
-                              color: _primaryColor.withOpacity(0.1),
+                              color: _primaryColor.withValues(alpha: 0.1),
                               border: Border.all(color: _primaryColor, width: 2),
                               borderRadius: BorderRadius.circular(8),
                             ),
@@ -133,7 +133,7 @@ class FactureLogementsPreviewPage extends StatelessWidget {
                       const SizedBox(height: 12),
                       Container(
                         decoration: BoxDecoration(
-                          border: Border.all(color: _primaryColor.withOpacity(0.3)),
+                          border: Border.all(color: _primaryColor.withValues(alpha: 0.3)),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         height: 600,
@@ -166,7 +166,7 @@ class FactureLogementsPreviewPage extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
-        border: Border.all(color: _primaryColor.withOpacity(0.3)),
+        border: Border.all(color: _primaryColor.withValues(alpha: 0.3)),
         borderRadius: BorderRadius.circular(6),
       ),
       child: Column(
@@ -218,8 +218,6 @@ Future<pw.Document> buildFactureLogementDocument(
 
   final fontBold = await PdfGoogleFonts.robotoBold();
   final dateFacturation = factureLogement["dateFacturation"]?.toString().split(' ')[0] ?? "";
-  final numRefSolide = "FAC/${factureLogement['IdFacture']}/$dateFacturation";
-
   final montant = num.tryParse(factureLogement["Totalpayer"].toString()) ?? 0.0;
   final tva = montant * 0.16;
   final cite = montant * 0.05;
@@ -337,29 +335,29 @@ Future<pw.Document> buildFactureLogementDocument(
                   ),
                   pw.TableRow(children: [
                     pw.Padding(padding: const pw.EdgeInsets.all(2), child: pw.Text('Logement', style: const pw.TextStyle(fontSize: 7))),
-                    pw.Padding(padding: const pw.EdgeInsets.all(2), child: pw.Text('${montant.toStringAsFixed(2)}', style: const pw.TextStyle(fontSize: 7), textAlign: pw.TextAlign.right)),
+                    pw.Padding(padding: const pw.EdgeInsets.all(2), child: pw.Text(montant.toStringAsFixed(2), style: const pw.TextStyle(fontSize: 7), textAlign: pw.TextAlign.right)),
                   ]),
                   pw.TableRow(children: [
                     pw.Padding(padding: const pw.EdgeInsets.all(2), child: pw.Text('TVA 16%', style: const pw.TextStyle(fontSize: 7))),
-                    pw.Padding(padding: const pw.EdgeInsets.all(2), child: pw.Text('${tva.toStringAsFixed(2)}', style: const pw.TextStyle(fontSize: 7), textAlign: pw.TextAlign.right)),
+                    pw.Padding(padding: const pw.EdgeInsets.all(2), child: pw.Text(tva.toStringAsFixed(2), style: const pw.TextStyle(fontSize: 7), textAlign: pw.TextAlign.right)),
                   ]),
                   pw.TableRow(children: [
                     pw.Padding(padding: const pw.EdgeInsets.all(2), child: pw.Text('Cité 5%', style: const pw.TextStyle(fontSize: 7))),
-                    pw.Padding(padding: const pw.EdgeInsets.all(2), child: pw.Text('${cite.toStringAsFixed(2)}', style: const pw.TextStyle(fontSize: 7), textAlign: pw.TextAlign.right)),
+                    pw.Padding(padding: const pw.EdgeInsets.all(2), child: pw.Text(cite.toStringAsFixed(2), style: const pw.TextStyle(fontSize: 7), textAlign: pw.TextAlign.right)),
                   ]),
                   pw.TableRow(children: [
                     pw.Padding(padding: const pw.EdgeInsets.all(2), child: pw.Text('FPT 5%', style: const pw.TextStyle(fontSize: 7))),
-                    pw.Padding(padding: const pw.EdgeInsets.all(2), child: pw.Text('${fpt.toStringAsFixed(2)}', style: const pw.TextStyle(fontSize: 7), textAlign: pw.TextAlign.right)),
+                    pw.Padding(padding: const pw.EdgeInsets.all(2), child: pw.Text(fpt.toStringAsFixed(2), style: const pw.TextStyle(fontSize: 7), textAlign: pw.TextAlign.right)),
                   ]),
                   pw.TableRow(children: [
                     pw.Padding(padding: const pw.EdgeInsets.all(2), child: pw.Text('Service 10%', style: const pw.TextStyle(fontSize: 7))),
-                    pw.Padding(padding: const pw.EdgeInsets.all(2), child: pw.Text('${service.toStringAsFixed(2)}', style: const pw.TextStyle(fontSize: 7), textAlign: pw.TextAlign.right)),
+                    pw.Padding(padding: const pw.EdgeInsets.all(2), child: pw.Text(service.toStringAsFixed(2), style: const pw.TextStyle(fontSize: 7), textAlign: pw.TextAlign.right)),
                   ]),
                   pw.TableRow(
                     decoration: pw.BoxDecoration(color: PdfColor.fromHex('E8F0FF')),
                     children: [
                       pw.Padding(padding: const pw.EdgeInsets.all(2), child: pw.Text('TOTAL TTC', style: pw.TextStyle(font: fontBold, fontSize: 8, color: PdfColor.fromHex('1F3A93')))),
-                      pw.Padding(padding: const pw.EdgeInsets.all(2), child: pw.Text('${totalTTC.toStringAsFixed(2)}', style: pw.TextStyle(font: fontBold, fontSize: 8, color: PdfColor.fromHex('1F3A93')), textAlign: pw.TextAlign.right)),
+                      pw.Padding(padding: const pw.EdgeInsets.all(2), child: pw.Text(totalTTC.toStringAsFixed(2), style: pw.TextStyle(font: fontBold, fontSize: 8, color: PdfColor.fromHex('1F3A93')), textAlign: pw.TextAlign.right)),
                     ],
                   ),
                 ],

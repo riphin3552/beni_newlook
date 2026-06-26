@@ -67,7 +67,7 @@ class FactureAutresServicesPreviewPage extends StatelessWidget {
                           Container(
                             padding: const EdgeInsets.all(12),
                             decoration: BoxDecoration(
-                              color: _primaryColor.withOpacity(0.1),
+                              color: _primaryColor.withValues(alpha: 0.1),
                               border: Border.all(color: _primaryColor, width: 2),
                               borderRadius: BorderRadius.circular(8),
                             ),
@@ -129,7 +129,7 @@ class FactureAutresServicesPreviewPage extends StatelessWidget {
                       const SizedBox(height: 12),
                       Container(
                         decoration: BoxDecoration(
-                          border: Border.all(color: _primaryColor.withOpacity(0.3)),
+                          border: Border.all(color: _primaryColor.withValues(alpha: 0.3)),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         height: 600,
@@ -162,7 +162,7 @@ class FactureAutresServicesPreviewPage extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
-        border: Border.all(color: _primaryColor.withOpacity(0.3)),
+        border: Border.all(color: _primaryColor.withValues(alpha: 0.3)),
         borderRadius: BorderRadius.circular(6),
       ),
       child: Column(
@@ -214,7 +214,6 @@ Future<pw.Document> buildAutresServicesDocument(
 
   final fontBold = await PdfGoogleFonts.robotoBold();
   final dateFacturation = factureServices["dateFacturation"]?.toString().split(' ')[0] ?? "";
-  final numRefSolide = "FAS/${factureServices['idFacturationAutresServices']}/$dateFacturation";
   final montant = num.tryParse(factureServices["MontantPayer"].toString()) ?? 0.0;
 
   pdf.addPage(
@@ -325,13 +324,13 @@ Future<pw.Document> buildAutresServicesDocument(
                   ),
                   pw.TableRow(children: [
                     pw.Padding(padding: const pw.EdgeInsets.all(2), child: pw.Text(factureServices['designationSectionAuxi']?.toString() ?? 'Service', style: const pw.TextStyle(fontSize: 7))),
-                    pw.Padding(padding: const pw.EdgeInsets.all(2), child: pw.Text('${montant.toStringAsFixed(2)}', style: const pw.TextStyle(fontSize: 7), textAlign: pw.TextAlign.right)),
+                    pw.Padding(padding: const pw.EdgeInsets.all(2), child: pw.Text(montant.toStringAsFixed(2), style: const pw.TextStyle(fontSize: 7), textAlign: pw.TextAlign.right)),
                   ]),
                   pw.TableRow(
                     decoration: pw.BoxDecoration(color: PdfColor.fromHex('E8F0FF')),
                     children: [
                       pw.Padding(padding: const pw.EdgeInsets.all(2), child: pw.Text('TOTAL TTC', style: pw.TextStyle(font: fontBold, fontSize: 8, color: PdfColor.fromHex('1F3A93')))),
-                      pw.Padding(padding: const pw.EdgeInsets.all(2), child: pw.Text('${montant.toStringAsFixed(2)}', style: pw.TextStyle(font: fontBold, fontSize: 8, color: PdfColor.fromHex('1F3A93')), textAlign: pw.TextAlign.right)),
+                      pw.Padding(padding: const pw.EdgeInsets.all(2), child: pw.Text(montant.toStringAsFixed(2), style: pw.TextStyle(font: fontBold, fontSize: 8, color: PdfColor.fromHex('1F3A93')), textAlign: pw.TextAlign.right)),
                     ],
                   ),
                 ],
