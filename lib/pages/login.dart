@@ -1,7 +1,9 @@
 
 import 'dart:convert';
 
+import 'package:beni_newlook/api_config.dart';
 import 'package:beni_newlook/main.dart';
+import 'package:beni_newlook/session_utilisateur.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
@@ -28,8 +30,8 @@ class _LoginState extends State<Login> {
     BuildContext context
   ) async {
     // Logique de connexion ici
-    var url = Uri.parse('https://riphin-salemanager.com/beni_newlook_API/connexion.php');
-    var response = await http.post(url, 
+    var url = Uri.parse('$apiBaseUrl/connexion.php');
+    var response = await http.post(url,
     headers: {'Content-Type': 'application/json'},
     body: json.encode({
       'nomUtilisateur': username,
@@ -43,10 +45,18 @@ class _LoginState extends State<Login> {
       var data = json.decode(response.body);
       if (data['success']) {
         // Connexion réussie
-           final int identreprise=data['user']['entreprise'];     
+           final int identreprise=data['user']['entreprise'];
 
         final prefs = await SharedPreferences.getInstance(); // sauvegarder le token
         await prefs.setString('token', data['user']['token']);
+
+        SessionUtilisateur.token = data['user']['token'];
+        SessionUtilisateur.idUtilisateur = data['user']['ID_utilisateur'];
+        SessionUtilisateur.idEntreprise = identreprise;
+        SessionUtilisateur.nomUtilisateur = data['user']['Nom_utilisateur'] ?? '';
+        SessionUtilisateur.role = data['user']['role'] ?? 'Serveur';
+        SessionUtilisateur.idSection = data['user']['idSection'];
+
         Navigator.pushReplacement(
           // ignore: use_build_context_synchronously
           context, 
@@ -75,7 +85,12 @@ class _LoginState extends State<Login> {
         );
       }
     } else {
-      // Erreur serveur
+      // Erreur serveur (ou compte desactive : connexion.php renvoie 403 avec un message)
+      String message = 'Erreur serveur: ${response.statusCode}';
+      try {
+        final data = json.decode(response.body);
+        if (data['message'] != null) message = data['message'];
+      } catch (_) {}
       showDialog(
         // ignore: use_build_context_synchronously
         context: context,
@@ -83,7 +98,7 @@ class _LoginState extends State<Login> {
           return AlertDialog(
             icon: Icon(Icons.warning_amber, color: Colors.orange, size: 48),
             title: Text('Erreur'),
-            content: Text('Erreur serveur: ${response.statusCode}'),
+            content: Text(message),
             actions: [
               TextButton(
                 onPressed: () {
@@ -105,26 +120,26 @@ class _LoginState extends State<Login> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Color.fromARGB(255, 245, 248, 255),
-      body: SingleChildScrollView(
-        child: Container(
-          height: MediaQuery.of(context).size.height,
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [
-                Color.fromARGB(255, 245, 248, 255),
-                Color.fromARGB(255, 225, 235, 255),
-              ],
-            ),
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Color.fromARGB(255, 245, 248, 255),
+              Color.fromARGB(255, 225, 235, 255),
+            ],
           ),
-          child: Center(
-            child: Form(
-              key: _formKey,
-              child: Padding(
-                padding: EdgeInsets.all(24),
+        ),
+        child: Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(24),
+            child: SizedBox(
+              width: 400,   // largeur fixe — carte compacte
+              child: Form(
+                key: _formKey,
                 child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisSize: MainAxisSize.min,
                   children: [
                     Card(
                       elevation: 8,
@@ -132,8 +147,9 @@ class _LoginState extends State<Login> {
                         borderRadius: BorderRadius.circular(16),
                       ),
                       child: Padding(
-                        padding: EdgeInsets.all(32),
+                        padding: const EdgeInsets.all(28),
                         child: Column(
+                          mainAxisSize: MainAxisSize.min,
                           children: [
                             CircleAvatar(
                               radius: 60,

@@ -248,7 +248,7 @@ class _FacturationchambreEspaceState extends State<FacturationchambreEspace> {
         centerTitle: true,
       ),
       backgroundColor: const Color.fromARGB(255, 245, 248, 255),
-      body: SingleChildScrollView(
+      body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
@@ -367,32 +367,30 @@ class _FacturationchambreEspaceState extends State<FacturationchambreEspace> {
                 ],
               ),
             ),
-            const SizedBox(height: 20),
-            Padding(
-              padding: const EdgeInsets.only(bottom: 20.0),
-              child: TextFormField(
-                controller: _searchController,
-                decoration: InputDecoration(
-                  hintText: 'Rechercher une reservation par client...',
-                  prefixIcon: const Icon(Icons.search, color: Color.fromARGB(255, 121, 169, 240)),
-                  filled: true,
-                  fillColor: Colors.white,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(color: Colors.grey[300]!),
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(color: Colors.grey[300]!),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: Color.fromARGB(255, 121, 169, 240), width: 2),
-                  ),
+            const SizedBox(height: 16),
+            TextFormField(
+              controller: _searchController,
+              decoration: InputDecoration(
+                hintText: 'Rechercher une réservation par client...',
+                prefixIcon: const Icon(Icons.search, color: Color.fromARGB(255, 121, 169, 240)),
+                filled: true,
+                fillColor: Colors.white,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: Colors.grey[300]!),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: Colors.grey[300]!),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(color: Color.fromARGB(255, 121, 169, 240), width: 2),
                 ),
               ),
             ),
-            FutureBuilder<List<dynamic>>(
+            const SizedBox(height: 16),
+            Expanded(child: FutureBuilder<List<dynamic>>(
               future: _reservationsFuture,
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
@@ -520,7 +518,7 @@ class _FacturationchambreEspaceState extends State<FacturationchambreEspace> {
                   );
                 }
               },
-            ),
+            )),  // ferme Expanded + FutureBuilder
           ],
         ),
       ),

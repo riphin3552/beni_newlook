@@ -5,7 +5,9 @@ import 'dart:io';
 import 'dart:typed_data';
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
+import 'package:beni_newlook/api_config.dart';
 import 'package:beni_newlook/pages/Utilisateurs.dart';
+import 'package:beni_newlook/session_utilisateur.dart';
 import 'package:file_picker/file_picker.dart';
 
 class Entreprise extends StatefulWidget {
@@ -58,8 +60,9 @@ class _EntrepriseState extends State<Entreprise> {
   File? logoFile, // 👈 optionnel
   required BuildContext context,
 }) async {
-  var url = Uri.parse('https://riphin-salemanager.com/beni_newlook_API/Ajouter_Entreprise.php');
+  var url = Uri.parse('$apiBaseUrl/Ajouter_Entreprise.php');
   var request = http.MultipartRequest('POST', url);
+  request.headers['Authorization'] = SessionUtilisateur.token;
 
   // Champs texte
   request.fields['nomEntreprise'] = denomination;
@@ -194,6 +197,14 @@ void resetformulaire() {
 
   @override
   Widget build(BuildContext context) {
+    if (!SessionUtilisateur.isGerant) {
+      return Scaffold(
+        appBar: AppBar(title: const Text("Informations de l'Entreprise")),
+        body: const Center(
+          child: Text("Accès réservé au Gérant.", style: TextStyle(color: Colors.grey)),
+        ),
+      );
+    }
     return Scaffold(
       appBar: AppBar(
         title: const Text("Informations de l'Entreprise"),

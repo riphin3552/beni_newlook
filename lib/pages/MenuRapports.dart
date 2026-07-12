@@ -1,4 +1,5 @@
 import 'package:beni_newlook/Rapports/EspacesChambresDisponibles.dart';
+import 'package:beni_newlook/Rapports/FicheDeStock.dart';
 import 'package:beni_newlook/Rapports/EspacesChambresOccupes.dart';
 import 'package:beni_newlook/Rapports/EvoltionReservations.dart';
 import 'package:beni_newlook/Rapports/ListeProduits.dart';
@@ -6,6 +7,7 @@ import 'package:beni_newlook/Rapports/RapportDepensesCharges.dart';
 import 'package:beni_newlook/Rapports/RapportEntreesEncaissements.dart';
 import 'package:beni_newlook/Rapports/RapportStatistiqueHebergement.dart';
 import 'package:beni_newlook/Rapports/RapportStocks.dart';
+import 'package:beni_newlook/session_utilisateur.dart';
 import 'package:flutter/material.dart';
 
 class MenuRapports extends StatefulWidget {
@@ -97,144 +99,7 @@ class _MenuRapportsState extends State<MenuRapports> {
                   spacing: 24,
                   runSpacing: 24,
                   alignment: WrapAlignment.start,
-                  children: [
-                    _buildSmartCard(
-                      context,
-                      index: 0,
-                      icon: Icons.inventory_2_outlined,
-                      title: 'Rapport Stocks',
-                      description: 'État des stocks disponibles',
-                      color: const Color(0xFF1976D2),
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) =>
-                                PdfPreviewPage(idEse: widget.identreprise),
-                          ),
-                        );
-                      },
-                    ),
-                    _buildSmartCard(
-                      context,
-                      index: 1,
-                      icon: Icons.list_alt_outlined,
-                      title: 'Liste des produits',
-                      description: 'Catalogue des produits',
-                      color: const Color(0xFF388E3C),
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) =>
-                                PdfPreviewPAGE(idEse: widget.identreprise),
-                          ),
-                        );
-                      },
-                    ),
-                    _buildSmartCard(
-                      context,
-                      index: 2,
-                      icon: Icons.bedroom_parent_outlined,
-                      title: 'Chambres disponibles',
-                      description: 'Espaces et chambres libres',
-                      color: const Color(0xFF00897B),
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => EspacesDisponiblesReportPage(
-                                idEse: widget.identreprise),
-                          ),
-                        );
-                      },
-                    ),
-                    _buildSmartCard(
-                      context,
-                      index: 3,
-                      icon: Icons.hotel_outlined,
-                      title: 'Chambres occupées',
-                      description: 'Espaces et chambres en cours',
-                      color: const Color(0xFFD32F2F),
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => EspacesOccupesReportPage(
-                                idEse: widget.identreprise),
-                          ),
-                        );
-                      },
-                    ),
-                    _buildSmartCard(
-                      context,
-                      index: 4,
-                      icon: Icons.trending_up_outlined,
-                      title: 'Évolution réservations',
-                      description: 'Historique des réservations',
-                      color: const Color(0xFF7B1FA2),
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => EvolutionReservations(
-                                identreprise: widget.identreprise),
-                          ),
-                        );
-                      },
-                    ),
-                    _buildSmartCard(
-                      context,
-                      index: 5,
-                      icon: Icons.money_off_outlined,
-                      title: 'Dépenses / Charges',
-                      description: 'Rapport des sorties de caisse',
-                      color: const Color(0xFFF57C00),
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => RapportDepensesCharges(
-                                identreprise: widget.identreprise),
-                          ),
-                        );
-                      },
-                    ),
-                    _buildSmartCard(
-                      context,
-                      index: 6,
-                      icon: Icons.savings_outlined,
-                      title: 'Entrées / Encaissements',
-                      description: 'Rapport des entrées en caisse',
-                      color: const Color(0xFF388E3C),
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => RapportEntreesEncaissements(
-                                identreprise: widget.identreprise),
-                          ),
-                        );
-                      },
-                    ),
-                    _buildSmartCard(
-                      context,
-                      index: 7,
-                      icon: Icons.analytics_outlined,
-                      title: 'Statistiques Hébergement',
-                      description: 'Rendement chambres et espaces',
-                      color: const Color(0xFF0D47A1),
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => RapportStatistiqueHebergement(
-                                identreprise: widget.identreprise),
-                          ),
-                        );
-                      },
-                    ),
-                  ],
+                  children: _buildCartesPourRole(context),
                 ),
               ),
             ),
@@ -242,6 +107,171 @@ class _MenuRapportsState extends State<MenuRapports> {
         ],
       ),
     );
+  }
+
+  // Le Serveur ne voit que la Fiche de Stock (filtree a sa section cote serveur).
+  // Gerant/Comptable/Caissier voient tous les rapports.
+  List<Widget> _buildCartesPourRole(BuildContext context) {
+    final ficheDeStock = _buildSmartCard(
+      context,
+      index: 8,
+      icon: Icons.table_chart_outlined,
+      title: 'Fiche de Stock',
+      description: 'Mouvements stock par section',
+      color: const Color(0xFF1565C0),
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => FicheDeStock(identreprise: widget.identreprise),
+          ),
+        );
+      },
+    );
+
+    if (SessionUtilisateur.isServeur) {
+      return [ficheDeStock];
+    }
+
+    return [
+      _buildSmartCard(
+        context,
+        index: 0,
+        icon: Icons.inventory_2_outlined,
+        title: 'Rapport Stocks',
+        description: 'État des stocks disponibles',
+        color: const Color(0xFF1976D2),
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) =>
+                  PdfPreviewPage(idEse: widget.identreprise),
+            ),
+          );
+        },
+      ),
+      _buildSmartCard(
+        context,
+        index: 1,
+        icon: Icons.list_alt_outlined,
+        title: 'Liste des produits',
+        description: 'Catalogue des produits',
+        color: const Color(0xFF388E3C),
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) =>
+                  PdfPreviewPAGE(idEse: widget.identreprise),
+            ),
+          );
+        },
+      ),
+      _buildSmartCard(
+        context,
+        index: 2,
+        icon: Icons.bedroom_parent_outlined,
+        title: 'Chambres disponibles',
+        description: 'Espaces et chambres libres',
+        color: const Color(0xFF00897B),
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) =>
+                  EspacesDisponiblesReportPage(idEse: widget.identreprise),
+            ),
+          );
+        },
+      ),
+      _buildSmartCard(
+        context,
+        index: 3,
+        icon: Icons.hotel_outlined,
+        title: 'Chambres occupées',
+        description: 'Espaces et chambres en cours',
+        color: const Color(0xFFD32F2F),
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) =>
+                  EspacesOccupesReportPage(idEse: widget.identreprise),
+            ),
+          );
+        },
+      ),
+      _buildSmartCard(
+        context,
+        index: 4,
+        icon: Icons.trending_up_outlined,
+        title: 'Évolution réservations',
+        description: 'Historique des réservations',
+        color: const Color(0xFF7B1FA2),
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) =>
+                  EvolutionReservations(identreprise: widget.identreprise),
+            ),
+          );
+        },
+      ),
+      _buildSmartCard(
+        context,
+        index: 5,
+        icon: Icons.money_off_outlined,
+        title: 'Dépenses / Charges',
+        description: 'Rapport des sorties de caisse',
+        color: const Color(0xFFF57C00),
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) =>
+                  RapportDepensesCharges(identreprise: widget.identreprise),
+            ),
+          );
+        },
+      ),
+      _buildSmartCard(
+        context,
+        index: 6,
+        icon: Icons.savings_outlined,
+        title: 'Entrées / Encaissements',
+        description: 'Rapport des entrées en caisse',
+        color: const Color(0xFF388E3C),
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => RapportEntreesEncaissements(
+                  identreprise: widget.identreprise),
+            ),
+          );
+        },
+      ),
+      _buildSmartCard(
+        context,
+        index: 7,
+        icon: Icons.analytics_outlined,
+        title: 'Statistiques Hébergement',
+        description: 'Rendement chambres et espaces',
+        color: const Color(0xFF0D47A1),
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => RapportStatistiqueHebergement(
+                  identreprise: widget.identreprise),
+            ),
+          );
+        },
+      ),
+      ficheDeStock,
+    ];
   }
 
   Widget _buildSmartCard(

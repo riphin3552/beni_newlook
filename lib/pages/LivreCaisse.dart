@@ -1,4 +1,6 @@
 ﻿import 'dart:convert';
+import 'package:beni_newlook/api_config.dart';
+import 'package:beni_newlook/session_utilisateur.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:pdf/pdf.dart';
@@ -70,8 +72,11 @@ class _LivreCaisseState extends State<LivreCaisse> {
 
     try {
       final response = await http.post(
-        Uri.parse('https://riphin-salemanager.com/beni_newlook_API/LivreCaisse.php'),
-        headers: {'Content-Type': 'application/json'},
+        Uri.parse('$apiBaseUrl/LivreCaisse.php'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': SessionUtilisateur.token,
+        },
         body: jsonEncode({
           'entreprise': widget.identreprise,
           'date_debut': _dateDebutController.text,
@@ -97,7 +102,7 @@ class _LivreCaisseState extends State<LivreCaisse> {
 
   Future<Map<String, dynamic>> _fetchEntrepriseInfos() async {
     final response = await http.post(
-      Uri.parse('https://riphin-salemanager.com/beni_newlook_API/AfficherInfos_Ese.php'),
+      Uri.parse('$apiBaseUrl/AfficherInfos_Ese.php'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({'idEse': widget.identreprise}),
     );
@@ -157,7 +162,7 @@ class _LivreCaisseState extends State<LivreCaisse> {
     try {
       final rawLogoPath = entreprise['logo_path']?.toString() ?? '';
     if (rawLogoPath.isNotEmpty) {
-      final logoUrl = rawLogoPath.startsWith('http') ? rawLogoPath : 'https://riphin-salemanager.com/beni_newlook_API/$rawLogoPath';
+      final logoUrl = rawLogoPath.startsWith('http') ? rawLogoPath : '$apiBaseUrl/$rawLogoPath';
       logoImage = await flutterImageProvider(NetworkImage(logoUrl));
     }
     } catch (_) {

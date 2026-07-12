@@ -22,6 +22,8 @@ class FacturePreviewPage extends StatelessWidget {
       0.0,
       (sum, d) => sum + (num.tryParse(d["totalPayer"].toString()) ?? 0),
     );
+    final double accompte   = num.tryParse(facture["Accompte"]?.toString()   ?? '0')?.toDouble() ?? totalTTC;
+    final double restApayer = num.tryParse(facture["RestApayer"]?.toString() ?? '0')?.toDouble() ?? 0;
 
     return Scaffold(
       appBar: AppBar(
@@ -156,6 +158,62 @@ class FacturePreviewPage extends StatelessWidget {
                           );
                         },
                       ),
+                      const Divider(height: 20),
+                      // ── Récapitulatif paiement ──────────────────────────
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _buildInfoField(
+                              "Acompte versé",
+                              "${accompte.toStringAsFixed(2)} CDF",
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                border: Border.all(
+                                  color: restApayer > 0
+                                      ? Colors.red.shade300
+                                      : Colors.green.shade300,
+                                  width: 1.5,
+                                ),
+                                borderRadius: BorderRadius.circular(6),
+                                color: restApayer > 0
+                                    ? Colors.red.shade50
+                                    : Colors.green.shade50,
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    "Reste à payer (dette)",
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.bold,
+                                      color: restApayer > 0
+                                          ? Colors.red[700]
+                                          : Colors.green[700],
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    "${restApayer.toStringAsFixed(2)} CDF",
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.bold,
+                                      color: restApayer > 0
+                                          ? Colors.red[700]
+                                          : Colors.green[700],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ],
                   ),
                 ),
@@ -269,6 +327,8 @@ Future<pw.Document> buildFactureDocument(
     0.0,
     (sum, d) => sum + (num.tryParse(d["totalPayer"].toString()) ?? 0),
   );
+  final double pdfAccompte   = num.tryParse(facture["Accompte"]?.toString()   ?? '0')?.toDouble() ?? totalTTC;
+  final double pdfRestApayer = num.tryParse(facture["RestApayer"]?.toString() ?? '0')?.toDouble() ?? 0;
   final dateFacturation = facture["datecommande"]?.toString().split(' ')[0] ?? "";
   pdf.addPage(
     pw.Page(
@@ -415,6 +475,34 @@ Future<pw.Document> buildFactureDocument(
                           style: pw.TextStyle(font: fontBold, fontSize: 8, color: PdfColor.fromHex('1F3A93')),
                           textAlign: pw.TextAlign.right,
                         ),
+                      ),
+                    ],
+                  ),
+                  pw.TableRow(
+                    decoration: pw.BoxDecoration(color: PdfColor.fromHex('E8FFE8')),
+                    children: [
+                      pw.Padding(
+                        padding: const pw.EdgeInsets.all(3),
+                        child: pw.Text('ACOMPTE', style: pw.TextStyle(font: fontBold, fontSize: 7, color: PdfColor.fromHex('1B5E20')), textAlign: pw.TextAlign.right),
+                      ),
+                      pw.Padding(padding: const pw.EdgeInsets.all(3), child: pw.Text('')),
+                      pw.Padding(
+                        padding: const pw.EdgeInsets.all(3),
+                        child: pw.Text(pdfAccompte.toStringAsFixed(2), style: pw.TextStyle(font: fontBold, fontSize: 7, color: PdfColor.fromHex('1B5E20')), textAlign: pw.TextAlign.right),
+                      ),
+                    ],
+                  ),
+                  pw.TableRow(
+                    decoration: pw.BoxDecoration(color: pdfRestApayer > 0 ? PdfColor.fromHex('FFEBEE') : PdfColor.fromHex('E8FFE8')),
+                    children: [
+                      pw.Padding(
+                        padding: const pw.EdgeInsets.all(3),
+                        child: pw.Text('RESTE/DETTE', style: pw.TextStyle(font: fontBold, fontSize: 7, color: pdfRestApayer > 0 ? PdfColor.fromHex('B71C1C') : PdfColor.fromHex('1B5E20')), textAlign: pw.TextAlign.right),
+                      ),
+                      pw.Padding(padding: const pw.EdgeInsets.all(3), child: pw.Text('')),
+                      pw.Padding(
+                        padding: const pw.EdgeInsets.all(3),
+                        child: pw.Text(pdfRestApayer.toStringAsFixed(2), style: pw.TextStyle(font: fontBold, fontSize: 7, color: pdfRestApayer > 0 ? PdfColor.fromHex('B71C1C') : PdfColor.fromHex('1B5E20')), textAlign: pw.TextAlign.right),
                       ),
                     ],
                   ),

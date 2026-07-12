@@ -3,10 +3,13 @@
 import 'dart:convert';
 
 
+import 'package:beni_newlook/AutreSortieProduits.dart';
 import 'package:beni_newlook/CategoryProduit.dart';
 import 'package:beni_newlook/EntreeStock.dart';
 import 'package:beni_newlook/IdentificationProduit.dart';
 import 'package:beni_newlook/PageCommande.dart';
+import 'package:beni_newlook/api_config.dart';
+import 'package:beni_newlook/session_utilisateur.dart';
 //import 'package:beni_newlook/PageCommande.dart';
 import 'package:beni_newlook/Rapports/ListeProduits.dart';
 import 'package:beni_newlook/TypesStock.dart';
@@ -21,6 +24,7 @@ import 'package:beni_newlook/pages/entreprise.dart';
 import 'package:beni_newlook/pages/login.dart';
 import 'package:bitsdojo_window/bitsdojo_window.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import 'dart:async';
@@ -33,12 +37,10 @@ void main() {
   WidgetsFlutterBinding.ensureInitialized();
   runApp(const MyApp(titre: "G-Newlook"));
   doWhenWindowReady(() {
-    const initialSize = Size(600, 600);
-    appWindow.minSize = const Size(400, 300); // taille minimale de la fenêtre
-    appWindow.size = initialSize; // taille initiale de la fenêtre
-    appWindow.alignment = Alignment.center; // centre la fenêtre
-    appWindow.title = "G-HOTEL"; // titre de la fenêtre
-
+    appWindow.title = "G-HOTEL";
+    // Petite fenêtre centrée pour l'écran de connexion
+    appWindow.size = const Size(460, 600);
+    appWindow.alignment = Alignment.center;
     appWindow.show();
   });
 }
@@ -58,6 +60,15 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF0D47A1)),
         useMaterial3: true,
       ),
+      localizationsDelegates: const [
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      supportedLocales: const [
+        Locale('fr', 'FR'),
+        Locale('en', 'US'),
+      ],
       home: const Login(),
     );
   }
@@ -77,7 +88,9 @@ class _MainMenuState extends State<MainMenu> {
   String entrepriseName= 'Chargement...';
   int idEntreprise = 0;
   int idUtilisateur = 0;
-  
+  String role = 'Serveur';
+  int? idSection;
+
   late String currentDate;
   late Timer _timer;
 
@@ -86,10 +99,11 @@ class _MainMenuState extends State<MainMenu> {
   void initState() {
     super.initState();
 
-    // 👇 Maximiser la fenêtre principale
-  Future.delayed(Duration.zero, () {
-    appWindow.maximize();
-  });
+    // Maximiser et définir taille minimale pour l'app principale
+    Future.delayed(Duration.zero, () {
+      appWindow.minSize = const Size(1024, 600);
+      appWindow.maximize();
+    });
 
 
 
@@ -153,43 +167,75 @@ class _MainMenuState extends State<MainMenu> {
   final prefs = await SharedPreferences.getInstance();
   final token = prefs.getString('token') ?? '';
 
+    try {
+      final response = await http.get(
+        Uri.parse('$apiBaseUrl/NLvalidate_Token.php'),
+        headers: {
+          'Authorization': token, // 👈 envoie le token brut
+          'Content-Type': 'application/json',
+        },
+      ).timeout(const Duration(seconds: 20));
 
-    final response = await http.get(
-      Uri.parse('https://riphin-salemanager.com/beni_newlook_API/NLvalidate_Token.php'),
-      headers: {
-        'Authorization': token, // 👈 envoie le token brut
-        'Content-Type': 'application/json',
-      },
-    ).timeout(const Duration(seconds: 20));
+      final data = json.decode(response.body);
 
-
-    final data = json.decode(response.body);
-
-    if (response.statusCode == 200 && data['success'] == true) {
-      if (data['user']['Nom_utilisateur'] != null) {
-        setState(() {
-
-          username = data['user']['Nom_utilisateur'] ?? 'Utilisateur'; // valeur par défaut si null
-          idEntreprise = data['user']['entreprise']; // recuperation de l'id de l'entreprise
-          idUtilisateur = data['user']['ID_utilisateur']; // recuperation de l'id de l'utilisateur
-        });
-
-        selectEntrepriseName(idEntreprise); // appel de la fonction pour selectionner le nom de l'entreprise
-      } else {
-        // ignore: use_build_context_synchronously
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Erreur lors du chargement des informations utilisateur')),
-        );
-
+      if (response.statusCode == 403) {
+        // Compte desactive entre-temps par le Gerant : on force la deconnexion.
+        await _forceLogout(data['message'] ?? 'Compte desactive');
+        return;
       }
-    } else {
-      // ignore: duplicate_ignore
-      // ignore: use_build_context_synchronously
+
+      if (response.statusCode == 200 && data['success'] == true) {
+        if (data['user']['Nom_utilisateur'] != null) {
+          setState(() {
+
+            username = data['user']['Nom_utilisateur'] ?? 'Utilisateur'; // valeur par défaut si null
+            idEntreprise = data['user']['entreprise']; // recuperation de l'id de l'entreprise
+            idUtilisateur = data['user']['ID_utilisateur']; // recuperation de l'id de l'utilisateur
+            role = data['user']['role'] ?? 'Serveur';
+            idSection = data['user']['idSection'];
+          });
+
+          SessionUtilisateur.token = token;
+          SessionUtilisateur.idUtilisateur = idUtilisateur;
+          SessionUtilisateur.idEntreprise = idEntreprise;
+          SessionUtilisateur.nomUtilisateur = username;
+          SessionUtilisateur.role = role;
+          SessionUtilisateur.idSection = idSection;
+
+          selectEntrepriseName(idEntreprise); // appel de la fonction pour selectionner le nom de l'entreprise
+        } else {
+          if (!mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Erreur lors du chargement des informations utilisateur')),
+          );
+        }
+      } else {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erreur serveur (${response.statusCode}): ${data['message'] ?? response.body}')),
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Erreur serveur: ${response.statusCode}')),
+        SnackBar(content: Text('Impossible de charger le profil utilisateur : $e')),
       );
     }
   }
+
+  // Deconnecte l'utilisateur (token invalide ou compte desactive) et revient a l'ecran de connexion.
+  Future<void> _forceLogout(String message) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('token');
+    SessionUtilisateur.clear();
+    if (!mounted) return;
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute(builder: (context) => const Login()),
+      (route) => false,
+    );
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+  }
+
 
 
 
@@ -197,39 +243,39 @@ class _MainMenuState extends State<MainMenu> {
   Future<void> selectEntrepriseName(
     int entrepriseId
   ) async {
+    try {
+      var url = Uri.parse('$apiBaseUrl/Getname_Ese.php');
+      var response = await http.post(url,
+      headers: {'Content-Type': 'application/json'},
+      body: json.encode({
+        'ID_entreprise': idEntreprise,
+      })
+      ).timeout(const Duration(seconds: 10));
 
-    var url = Uri.parse('https://riphin-salemanager.com/beni_newlook_API/Getname_Ese.php');
-    var response = await http.post(url,
-    headers: {'Content-Type': 'application/json'},
-    body: json.encode({
-      'ID_entreprise': idEntreprise,
-    })
-    ).timeout(const Duration(seconds: 10));
+      if (!mounted) return;
 
-    if (!mounted) return;
+      if (response.statusCode == 200) {
+          var data = json.decode(response.body);
 
-    if (response.statusCode == 200) {
-        var data = json.decode(response.body);
+        if (data['success']) {
+          setState(() {
+            entrepriseName = data['entreprise']?? 'Entreprise';
+          });
 
-      if (data['success']) {
-        setState(() {
-          entrepriseName = data['entreprise']?? 'Entreprise';
-        });
-
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(data['message'] ?? 'Échec de la récupération du nom de l\'entreprise')),
+          );
+        }
       } else {
-        // Échec de la récupération
-        // ignore: duplicate_ignore
-        // ignore: use_build_context_synchronously
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(data['message'] ?? 'Échec de la récupération du nom de l\'entreprise')),
+          SnackBar(content: Text('Erreur serveur: ${response.statusCode}')),
         );
       }
-    } else {
-      // Erreur serveur
-      // ignore: duplicate_ignore
-      // ignore: use_build_context_synchronously
+    } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Erreur serveur: ${response.statusCode}')),
+        SnackBar(content: Text('Impossible de récupérer le nom de l\'entreprise : $e')),
       );
     }
   }
@@ -278,19 +324,7 @@ class _MainMenuState extends State<MainMenu> {
                       Expanded(
                         child: ListView(
                           padding: EdgeInsets.zero,
-                          children: [
-                            _buildMenuItem(Icons.home, "Accueil", 0),
-                            _buildMenuItem(Icons.inventory_2, "Stock", 1),
-                            _buildMenuItem(Icons.house, "Logements", 2),
-                            _buildMenuItem(Icons.point_of_sale, "Caisse", 3),
-                            _buildMenuItem(Icons.receipt_long, "Facturation", 4),
-                            _buildMenuItem(Icons.shopping_cart, "Commandes", 5),
-                            _buildMenuItem(Icons.people, "RH", 6),
-                            _buildMenuItem(Icons.build, "Équipements", 7),
-                            _buildMenuItem(Icons.local_shipping, "Fournisseurs", 8),
-                            _buildMenuItem(Icons.bar_chart, "Rapports", 9),
-                            _buildMenuItem(Icons.settings, "Paramètres", 10),
-                          ],
+                          children: _buildMenuItemsPourRole(),
                         ),
                       ),
                       const Divider(color: Colors.white24),
@@ -314,6 +348,11 @@ class _MainMenuState extends State<MainMenu> {
                                 overflow: TextOverflow.ellipsis,
                               ),
                             ),
+                            IconButton(
+                              tooltip: 'Déconnexion',
+                              icon: const Icon(Icons.logout, color: Colors.white70, size: 20),
+                              onPressed: () => _forceLogout('Vous êtes déconnecté(e).'),
+                            ),
                           ],
                         ),
                       ),
@@ -336,6 +375,44 @@ class _MainMenuState extends State<MainMenu> {
         ),
       ),
     );
+  }
+
+  // Construit la liste des entrees du menu visibles selon le role de l'utilisateur connecte.
+  // Regle : Gerant, Comptable et Caissier ont acces a tout le systeme (sauf Parametres,
+  // reserve au Gerant seul). Le Serveur n'a acces qu'a Rapports (Fiche de Stock de sa
+  // section, filtre cote serveur) et Facturation.
+  List<Widget> _buildMenuItemsPourRole() {
+    final bool accesComplet = role == 'Gerant' || role == 'Comptable' || role == 'Caissier';
+
+    final items = <Widget>[
+      _buildMenuItem(Icons.home, "Accueil", 0), // tous les roles
+    ];
+
+    if (accesComplet) {
+      items.add(_buildMenuItem(Icons.inventory_2, "Stock", 1));
+      items.add(_buildMenuItem(Icons.house, "Logements", 2));
+      items.add(_buildMenuItem(Icons.point_of_sale, "Caisse", 3));
+    }
+
+    // Facturation : accessible a tous les roles, y compris Serveur
+    items.add(_buildMenuItem(Icons.receipt_long, "Facturation", 4));
+
+    if (accesComplet) {
+      items.add(_buildMenuItem(Icons.shopping_cart, "Commandes", 5));
+      items.add(_buildMenuItem(Icons.people, "RH", 6));
+      items.add(_buildMenuItem(Icons.build, "Équipements", 7));
+      items.add(_buildMenuItem(Icons.local_shipping, "Fournisseurs", 8));
+    }
+
+    // Rapports : tous les roles (le Serveur n'y voit que la Fiche de Stock de sa section)
+    items.add(_buildMenuItem(Icons.bar_chart, "Rapports", 9));
+
+    // Parametres (dont gestion des utilisateurs et entreprise) : Gerant uniquement
+    if (role == 'Gerant') {
+      items.add(_buildMenuItem(Icons.settings, "Paramètres", 10));
+    }
+
+    return items;
   }
 
   // Fonction pour construire chaque ligne du menu
@@ -513,20 +590,12 @@ class _StockMenuState extends State<StockMenu> {
                     description: 'Créer et gérer',
                     color: Color(0xFF1976D2),
                     onTap: () {
-                      showDialog(
-                        context: context,
-                        builder: (BuildContext context) {
-                          return Dialog(
-                            child: SizedBox(
-                              width: 650,
-                              height: 500,
-                              child: TypeProduit(
-                                identreprise: widget.identreprise,
-                              ),
-                            ),
-                          );
-                        },
-                      );
+                      Navigator.of(context).push(MaterialPageRoute(
+                        fullscreenDialog: true,
+                        builder: (_) => TypeProduit(
+                          identreprise: widget.identreprise,
+                        ),
+                      ));
                     },
                   ),
                   _buildSmartCard(
@@ -537,20 +606,12 @@ class _StockMenuState extends State<StockMenu> {
                     description: 'Organiser',
                     color: Color(0xFF388E3C),
                     onTap: () {
-                      showDialog(
-                        context: context,
-                        builder: (BuildContext context) {
-                          return Dialog(
-                            child: SizedBox(
-                              width: 650,
-                              height: 500,
-                              child: Categoryproduit(
-                                identreprise: widget.identreprise,
-                              ),
-                            ),
-                          );
-                        },
-                      );
+                      Navigator.of(context).push(MaterialPageRoute(
+                        fullscreenDialog: true,
+                        builder: (_) => Categoryproduit(
+                          identreprise: widget.identreprise,
+                        ),
+                      ));
                     },
                   ),
                   _buildSmartCard(
@@ -561,20 +622,12 @@ class _StockMenuState extends State<StockMenu> {
                     description: 'Produits détaillés',
                     color: Color(0xFFF57C00),
                     onTap: () {
-                      showDialog(
-                        context: context,
-                        builder: (BuildContext context) {
-                          return Dialog(
-                            child: SizedBox(
-                              width: 720,
-                              height: 580,
-                              child: Identificationproduit(
-                                identreprise: widget.identreprise,
-                              ),
-                            ),
-                          );
-                        },
-                      );
+                      Navigator.of(context).push(MaterialPageRoute(
+                        fullscreenDialog: true,
+                        builder: (_) => Identificationproduit(
+                          identreprise: widget.identreprise,
+                        ),
+                      ));
                     },
                   ),
                   _buildSmartCard(
@@ -586,21 +639,13 @@ class _StockMenuState extends State<StockMenu> {
                     color: Color(0xFF7B1FA2),
                     onTap: () {
                       // code
-                      showDialog(
-                        context: context,
-                        builder: (BuildContext context) {
-                          return Dialog(
-                            child: SizedBox(
-                              width: 650,
-                              height: 520,
-                              child: TypeStock(
-                                identreprise: widget.identreprise,
-                              ),
-                            ),
-                          );
+                      Navigator.of(context).push(MaterialPageRoute(
+                        fullscreenDialog: true,
+                        builder: (_) => TypeStock(
+                          identreprise: widget.identreprise,
+                        ),
+                      ));
                     },
-                  );
-                },
                   ),
                   _buildSmartCard(
                     context,
@@ -611,20 +656,12 @@ class _StockMenuState extends State<StockMenu> {
                     color: Color(0xFFD32F2F),
                     onTap: () {
                       // code
-                      showDialog(
-                        context: context,
-                        builder: (BuildContext context) {
-                          return Dialog(
-                            child: SizedBox(
-                              width: 880,
-                              height: 600,
-                              child: Entreestock(
-                                identreprise: widget.identreprise,
-                              ),
-                            ),
-                          );
-                        },
-                      );
+                      Navigator.of(context).push(MaterialPageRoute(
+                        fullscreenDialog: true,
+                        builder: (_) => Entreestock(
+                          identreprise: widget.identreprise,
+                        ),
+                      ));
                     },
                   ),
                   _buildSmartCard(
@@ -684,6 +721,22 @@ class _StockMenuState extends State<StockMenu> {
                           );
                         },
                       );
+                    },
+                  ),
+                  _buildSmartCard(
+                    context,
+                    index: 8,
+                    icon: Icons.output,
+                    title: 'Autres Sorties',
+                    description: 'Cassées / Abîmées',
+                    color: Color(0xFFE64A19),
+                    onTap: () {
+                      Navigator.of(context).push(MaterialPageRoute(
+                        fullscreenDialog: true,
+                        builder: (_) => AutreSortieProduits(
+                          identreprise: widget.identreprise,
+                        ),
+                      ));
                     },
                   ),
                 ],
@@ -830,19 +883,24 @@ class ParametresMenu extends StatefulWidget {
 
 class _ParametresMenuState extends State<ParametresMenu> {
   late Future<List<Map<String, dynamic>>> _futureUtilisateurs;
+  List<Map<String, dynamic>> _sectionsPourFormulaire = [];
 
   @override
   void initState() {
     super.initState();
     _futureUtilisateurs = fetchUtilisateurs();
+    _fetchSectionsPourFormulaire();
   }
 
   Future<List<Map<String, dynamic>>> fetchUtilisateurs() async {
-    var url = Uri.parse("https://riphin-salemanager.com/beni_newlook_API/AfficherUtilisateurs.php");
+    var url = Uri.parse("$apiBaseUrl/AfficherUtilisateurs.php");
     var response = await http.post(
       url,
-      headers: {'Content-Type': 'application/json'},
-      body: json.encode({"entreprise": widget.identreprise}),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': SessionUtilisateur.token,
+      },
+      body: json.encode({}),
     );
 
     if (response.statusCode == 200) {
@@ -857,11 +915,26 @@ class _ParametresMenuState extends State<ParametresMenu> {
     }
   }
 
+  Future<void> _fetchSectionsPourFormulaire() async {
+    final response = await http.post(
+      Uri.parse('$apiBaseUrl/AfficherSectionsPrincipales.php'),
+      headers: {'Content-Type': 'application/json'},
+      body: json.encode({'entreprise': widget.identreprise}),
+    );
+    if (response.statusCode == 200) {
+      final List data = json.decode(response.body);
+      setState(() => _sectionsPourFormulaire = List<Map<String, dynamic>>.from(data));
+    }
+  }
+
   Future<void> supprimerUtilisateur(int idUtilisateur) async {
-    var url = Uri.parse("https://riphin-salemanager.com/beni_newlook_API/DeleteUtilisateur.php");
+    var url = Uri.parse("$apiBaseUrl/DeleteUtilisateur.php");
     var response = await http.post(
       url,
-      headers: {'Content-Type': 'application/json'},
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': SessionUtilisateur.token,
+      },
       body: json.encode({"id": idUtilisateur}),
     );
 
@@ -882,83 +955,166 @@ class _ParametresMenuState extends State<ParametresMenu> {
     }
   }
 
+  static const List<String> _rolesDisponibles = ['Gerant', 'Comptable', 'Caissier', 'Serveur'];
+
+  Future<void> _envoyerModification(Map<String, dynamic> body) async {
+    var url = Uri.parse("$apiBaseUrl/ModifierUtilisateur.php");
+    var response = await http.post(
+      url,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': SessionUtilisateur.token,
+      },
+      body: json.encode(body),
+    );
+    if (!mounted) return;
+    if (response.statusCode == 200) {
+      var data = json.decode(response.body);
+      if (data['success'] == true) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Utilisateur modifié avec succès")),
+        );
+        setState(() => _futureUtilisateurs = fetchUtilisateurs());
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Erreur: ${data['message'] ?? data['error']}")),
+        );
+      }
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Erreur serveur: ${response.statusCode}")),
+      );
+    }
+  }
+
+  void _reinitialiserMotDePasse(int idUtilisateur) {
+    final TextEditingController nouveauPasswordController = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (BuildContext dialogContext) {
+        return AlertDialog(
+          title: const Text("Réinitialiser le mot de passe"),
+          content: TextField(
+            controller: nouveauPasswordController,
+            obscureText: true,
+            decoration: const InputDecoration(labelText: "Nouveau mot de passe"),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: const Text("Annuler"),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                if (nouveauPasswordController.text.isEmpty) return;
+                Navigator.pop(dialogContext);
+                await _envoyerModification({
+                  "id": idUtilisateur,
+                  "keypassword": nouveauPasswordController.text,
+                });
+              },
+              child: const Text("Réinitialiser"),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   void modifierUtilisateur(Map<String, dynamic> user) {
     final TextEditingController nomController =
         TextEditingController(text: user['Nom_utilisateur']);
     final TextEditingController telController =
         TextEditingController(text: user['telephone']);
-    final TextEditingController passwordController =
-        TextEditingController(text: user['Motdepass']);
+    String selectedRole = user['role'] ?? 'Serveur';
+    int? selectedSection = user['idSection'];
+    bool actif = (user['actif'] ?? 1) == 1;
 
     showDialog(
       context: context,
       builder: (BuildContext context) {
-        return Dialog(
-          child: SizedBox(
-            width: 400,
-            height: 300,
-            child: Padding(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                children: [
-                  const Text("Modifier Utilisateur",
-                      style: TextStyle(fontWeight: FontWeight.bold)),
-                  TextField(
-                    controller: nomController,
-                    decoration: const InputDecoration(labelText: "Nom"),
-                  ),
-                  TextField(
-                    controller: telController,
-                    decoration: const InputDecoration(labelText: "Téléphone"),
-                  ),
-                  TextField(
-                    controller: passwordController,
-                    decoration: const InputDecoration(labelText: "Mot de pass"),
-                  ),
-                  const SizedBox(height: 20),
-                  ElevatedButton(
-                    onPressed: () async {
-                      var url = Uri.parse(
-                          "https://riphin-salemanager.com/beni_newlook_API/ModifierUtilisateur.php");
-                      var response = await http.post(
-                        url,
-                        headers: {'Content-Type': 'application/json'},
-                        body: json.encode({
-                          "id": user['ID_utilisateur'],
-                          "name": nomController.text,
-                          "phone": telController.text,
-                          "keypassword":passwordController.text
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return Dialog(
+              child: SizedBox(
+                width: 420,
+                child: Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Text("Modifier Utilisateur",
+                          style: TextStyle(fontWeight: FontWeight.bold)),
+                      const SizedBox(height: 12),
+                      TextField(
+                        controller: nomController,
+                        decoration: const InputDecoration(labelText: "Nom"),
+                      ),
+                      TextField(
+                        controller: telController,
+                        decoration: const InputDecoration(labelText: "Téléphone"),
+                      ),
+                      DropdownButtonFormField<String>(
+                        initialValue: selectedRole,
+                        decoration: const InputDecoration(labelText: "Rôle"),
+                        items: _rolesDisponibles
+                            .map((r) => DropdownMenuItem(value: r, child: Text(r)))
+                            .toList(),
+                        onChanged: (v) => setDialogState(() {
+                          selectedRole = v ?? 'Serveur';
+                          if (selectedRole == 'Gerant') selectedSection = null;
                         }),
-                      );
-
-                      if (response.statusCode == 200) {
-                        var data = json.decode(response.body);
-                        if (data['success']==true) {
-                          // ignore: use_build_context_synchronously
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                                content: Text("Utilisateur modifié avec succès")),
-                          );
-                          //print(user['ID_utilisateur']);
-                          setState(() {
-                            _futureUtilisateurs = fetchUtilisateurs();
-                          });
-                          // ignore: use_build_context_synchronously
+                      ),
+                      if (selectedRole != 'Gerant')
+                        DropdownButtonFormField<int>(
+                          initialValue: selectedSection,
+                          decoration: const InputDecoration(labelText: "Section affectée"),
+                          items: _sectionsPourFormulaire
+                              .map((s) => DropdownMenuItem<int>(
+                                    value: s['idSection'],
+                                    child: Text(s['descptionSection']),
+                                  ))
+                              .toList(),
+                          onChanged: (v) => setDialogState(() => selectedSection = v),
+                        ),
+                      SwitchListTile(
+                        title: const Text("Compte actif"),
+                        value: actif,
+                        onChanged: (v) => setDialogState(() => actif = v),
+                        contentPadding: EdgeInsets.zero,
+                      ),
+                      TextButton.icon(
+                        icon: const Icon(Icons.lock_reset, size: 18),
+                        label: const Text("Réinitialiser le mot de passe"),
+                        onPressed: () => _reinitialiserMotDePasse(user['ID_utilisateur']),
+                      ),
+                      const SizedBox(height: 12),
+                      ElevatedButton(
+                        onPressed: () async {
+                          if (selectedRole != 'Gerant' && selectedSection == null) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text("Veuillez sélectionner une section")),
+                            );
+                            return;
+                          }
                           Navigator.pop(context);
-                        } else {
-                          // ignore: use_build_context_synchronously
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text("Erreur: ${data['error']}")),
-                          );
-                        }
-                      }
-                    },
-                    child: const Text("Enregistrer"),
-                  )
-                ],
+                          await _envoyerModification({
+                            "id": user['ID_utilisateur'],
+                            "name": nomController.text,
+                            "phone": telController.text,
+                            "role": selectedRole,
+                            "idSection": selectedRole == 'Gerant' ? null : selectedSection,
+                            "actif": actif ? 1 : 0,
+                          });
+                        },
+                        child: const Text("Enregistrer"),
+                      ),
+                    ],
+                  ),
+                ),
               ),
-            ),
-          ),
+            );
+          },
         );
       },
     );
@@ -966,6 +1122,11 @@ class _ParametresMenuState extends State<ParametresMenu> {
 
   @override
   Widget build(BuildContext context) {
+    if (!SessionUtilisateur.isGerant) {
+      return const Center(
+        child: Text("Accès réservé au Gérant.", style: TextStyle(color: Colors.grey)),
+      );
+    }
     return Padding(
       padding: const EdgeInsets.all(20),
       child: Column(
@@ -985,36 +1146,20 @@ class _ParametresMenuState extends State<ParametresMenu> {
                     icon: const Icon(Icons.person, size: 30, color: Colors.blue),
                     tooltip: "Utilisateurs",
                     onPressed: () {
-                      showDialog(
-                        context: context,
-                        builder: (BuildContext context) {
-                          return Dialog(
-                            child: SizedBox(
-                              width: 650,
-                              height: 500,
-                              child: Utilisateurs(identreprise: widget.identreprise),
-                            ),
-                          );
-                        },
-                      );
+                      Navigator.of(context).push(MaterialPageRoute(
+                        fullscreenDialog: true,
+                        builder: (_) => Utilisateurs(identreprise: widget.identreprise),
+                      ));
                     },
                   ),
                   IconButton(
                     icon: const Icon(Icons.house_sharp, size: 30, color: Colors.green),
                     tooltip: "Entreprise",
                     onPressed: () {
-                      showDialog(
-                        context: context,
-                        builder: (BuildContext context) {
-                          return Dialog(
-                            child: SizedBox(
-                              width: 650,
-                              height: 500,
-                              child: Entreprise(),
-                            ),
-                          );
-                        },
-                      );
+                      Navigator.of(context).push(MaterialPageRoute(
+                        fullscreenDialog: true,
+                        builder: (_) => Entreprise(),
+                      ));
                     },
                   ),
                 ],
@@ -1065,14 +1210,16 @@ class _ParametresMenuState extends State<ParametresMenu> {
                           columns: const [
                             DataColumn(label: Text("ID", style: TextStyle(fontWeight: FontWeight.bold, color: Color.fromARGB(255, 121, 169, 240)))),
                             DataColumn(label: Text("Nom", style: TextStyle(fontWeight: FontWeight.bold, color: Color.fromARGB(255, 121, 169, 240)))),
-                            DataColumn(label: Text("Mot de passe", style: TextStyle(fontWeight: FontWeight.bold, color: Color.fromARGB(255, 121, 169, 240)))),
+                            DataColumn(label: Text("Rôle", style: TextStyle(fontWeight: FontWeight.bold, color: Color.fromARGB(255, 121, 169, 240)))),
+                            DataColumn(label: Text("Section", style: TextStyle(fontWeight: FontWeight.bold, color: Color.fromARGB(255, 121, 169, 240)))),
                             DataColumn(label: Text("Téléphone", style: TextStyle(fontWeight: FontWeight.bold, color: Color.fromARGB(255, 121, 169, 240)))),
-                            DataColumn(label: Text("Entreprise", style: TextStyle(fontWeight: FontWeight.bold, color: Color.fromARGB(255, 121, 169, 240)))),
+                            DataColumn(label: Text("Statut", style: TextStyle(fontWeight: FontWeight.bold, color: Color.fromARGB(255, 121, 169, 240)))),
                             DataColumn(label: Text("Actions", style: TextStyle(fontWeight: FontWeight.bold, color: Color.fromARGB(255, 121, 169, 240)))),
                           ],
                           rows: utilisateurs.asMap().entries.map((entry) {
                             int index = entry.key;
                             dynamic user = entry.value;
+                            final bool estActif = (user['actif'] ?? 1) == 1;
                             return DataRow(
                               color: WidgetStateProperty.all(
                                 index.isEven ? Colors.white : Color.fromARGB(255, 245, 248, 255),
@@ -1080,9 +1227,16 @@ class _ParametresMenuState extends State<ParametresMenu> {
                               cells: [
                                   DataCell(Text(user['ID_utilisateur'].toString())),
                                   DataCell(Text(user['Nom_utilisateur'] ?? '')),
-                                  DataCell(Text(user['Motdepass'] ?? '')),
+                                  DataCell(Text(user['role'] ?? '')),
+                                  DataCell(Text(user['descptionSection'] ?? '—')),
                                   DataCell(Text(user['telephone'] ?? '')),
-                                  DataCell(Text(user['Denomination'] ?? '')),
+                                  DataCell(Text(
+                                    estActif ? 'Actif' : 'Désactivé',
+                                    style: TextStyle(
+                                      color: estActif ? Colors.green : Colors.red,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  )),
                                   DataCell(Row(
                                     children: [
                                       IconButton(
@@ -1169,14 +1323,10 @@ class _CommandesMenuState extends State<CommandesMenu> {
   void _refresh() => setState(() => _futureCommandes = fetchCommandes());
 
   void _ouvrirCommande() {
-    showDialog(
-      context: context,
-      builder: (context) => Dialog(
-        child: SizedBox(
-          width: 850,
-          height: 650,
-          child: CommandePage(idEntreprise: widget.identreprise),
-        ),
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        fullscreenDialog: true,
+        builder: (_) => CommandePage(idEntreprise: widget.identreprise),
       ),
     ).then((_) => _refresh());
   }

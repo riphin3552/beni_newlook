@@ -1,0 +1,4 @@
+2026-07-08T21:33:55.883610Z 0 [System] [MY-013169] [Server] C:\mysql\bin\mysqld.exe (mysqld 8.0.43) initializing of server in progress as process 53240
+2026-07-08T21:33:56.000004Z 1 [System] [MY-013576] [InnoDB] InnoDB initialization has started.
+2026-07-08T21:33:56.673725Z 1 [System] [MY-013577] [InnoDB] InnoDB initialization has ended.
+2026-07-08T21:34:02.912269Z 5 [Warning] [MY-010453] [Server] root@localhost is created with an empty password ! Please consider switching off the --initialize-insecure option.

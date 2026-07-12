@@ -1,4 +1,6 @@
 ﻿import 'dart:convert';
+import 'package:beni_newlook/api_config.dart';
+import 'package:beni_newlook/session_utilisateur.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:pdf/pdf.dart';
@@ -39,6 +41,9 @@ class _SortieCaisseState extends State<SortieCaisse> {
   String? _selectedModePaiement;
   bool _isLoading = false;
 
+  List<Map<String, dynamic>> _sections = [];
+  int? _selectedSection;
+
   static const List<String> _modesPaiement = [
     'Espèces',
     'Mobile money',
@@ -58,10 +63,25 @@ class _SortieCaisseState extends State<SortieCaisse> {
     _filterEndDateController = TextEditingController();
     _mouvementsFuture = fetchSortiesCaisse();
     _loadTypeCharges();
+    _fetchSections();
+  }
+
+  Future<void> _fetchSections() async {
+    final response = await http.post(
+      Uri.parse('$apiBaseUrl/AfficherSectionsPrincipales.php'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'entreprise': widget.identreprise}),
+    );
+    if (response.statusCode == 200) {
+      final List data = jsonDecode(response.body);
+      setState(() {
+        _sections = List<Map<String, dynamic>>.from(data);
+      });
+    }
   }
 
   Future<void> _loadTypeCharges() async {
-    final url = Uri.parse('https://riphin-salemanager.com/beni_newlook_API/AfficherTypeCharges.php');
+    final url = Uri.parse('$apiBaseUrl/AfficherTypeCharges.php');
     try {
       final response = await http.post(
         url,
@@ -78,7 +98,7 @@ class _SortieCaisseState extends State<SortieCaisse> {
   }
 
   Future<List<dynamic>> fetchSortiesCaisse() async {
-    final url = Uri.parse('https://riphin-salemanager.com/beni_newlook_API/AfficherMouvementsSortieCaisse.php');
+    final url = Uri.parse('$apiBaseUrl/AfficherMouvementsSortieCaisse.php');
     try {
       final response = await http.post(
         url,
@@ -107,7 +127,7 @@ class _SortieCaisseState extends State<SortieCaisse> {
 
   Future<Map<String, dynamic>> fetchEntrepriseInfos() async {
     final response = await http.post(
-      Uri.parse("https://riphin-salemanager.com/beni_newlook_API/AfficherInfos_Ese.php"),
+      Uri.parse("$apiBaseUrl/AfficherInfos_Ese.php"),
       headers: {"Content-Type": "application/json"},
       body: jsonEncode({"idEse": widget.identreprise}),
     );
@@ -123,7 +143,7 @@ class _SortieCaisseState extends State<SortieCaisse> {
     try {
       final rawLogoPath = entreprise['logo_path']?.toString() ?? '';
     if (rawLogoPath.isNotEmpty) {
-      final logoUrl = rawLogoPath.startsWith('http') ? rawLogoPath : 'https://riphin-salemanager.com/beni_newlook_API/$rawLogoPath';
+      final logoUrl = rawLogoPath.startsWith('http') ? rawLogoPath : '$apiBaseUrl/$rawLogoPath';
       logoImage = await flutterImageProvider(NetworkImage(logoUrl));
     }
     } catch (e) {
@@ -502,14 +522,22 @@ class _SortieCaisseState extends State<SortieCaisse> {
   Future<void> enregistrerSortieCaisse() async {
     if (!_formKey.currentState!.validate()) return;
 
+    if (_selectedSection == null) {
+      _showSimpleDialog('Erreur', 'Veuillez sélectionner une section.');
+      return;
+    }
+
     setState(() => _isLoading = true);
 
     final montant = double.tryParse(_montantController.text.replaceAll(',', '.')) ?? 0.0;
-    final url = Uri.parse('https://riphin-salemanager.com/beni_newlook_API/sortiecaisse.php');
+    final url = Uri.parse('$apiBaseUrl/sortiecaisse.php');
     try {
       final response = await http.post(
         url,
-        headers: {'Content-Type': 'application/json'},
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': SessionUtilisateur.token,
+        },
         body: jsonEncode({
           'dateoperation': _dateController.text,
           'montant': montant,
@@ -518,8 +546,7 @@ class _SortieCaisseState extends State<SortieCaisse> {
           'referenceExterne': _refExtController.text,
           'BeneficiaireOUdeposant': _beneficiaireController.text,
           'descriptionMouvement': _descriptionController.text,
-          'idutilisateur': widget.idUtilisateur,
-          'entreprise': widget.identreprise,
+          'idSection': _selectedSection,
         }),
       );
 
@@ -605,6 +632,8 @@ class _SortieCaisseState extends State<SortieCaisse> {
               key: _formKey,
               child: Column(
                 children: [
+                  _buildSectionDropdown(),
+                  const SizedBox(height: 16),
                   _buildDateAndAmountRow(),
                   const SizedBox(height: 16),
                   _buildDestinationAndPaymentRow(),
@@ -620,6 +649,25 @@ class _SortieCaisseState extends State<SortieCaisse> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildSectionDropdown() {
+    return DropdownButtonFormField<int>(
+      initialValue: _selectedSection,
+      decoration: InputDecoration(
+        labelText: "Section",
+        prefixIcon: const Icon(Icons.storefront_outlined, color: _primaryColorSortie),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+      ),
+      items: _sections
+          .map((s) => DropdownMenuItem<int>(
+                value: s['idSection'],
+                child: Text(s['descptionSection']),
+              ))
+          .toList(),
+      onChanged: (v) => setState(() => _selectedSection = v),
+      validator: (v) => v == null ? 'Veuillez sélectionner une section' : null,
     );
   }
 

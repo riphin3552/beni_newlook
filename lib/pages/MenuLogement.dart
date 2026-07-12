@@ -104,20 +104,12 @@ class _MenuGestionlogementState extends State<MenuGestionlogement> {
                           description: 'Créer et gérer',
                           color: const Color(0xFF1976D2),
                           onTap: () {
-                            showDialog(
-                              context: context,
-                              builder: (BuildContext context) {
-                                return Dialog(
-                                  child: SizedBox(
-                                    width: 670,
-                                    height: 560,
-                                    child: Chambreespace(
-                                      identreprise: widget.identreprise,
-                                    ),
-                                  ),
-                                );
-                              },
-                            );
+                            Navigator.of(context).push(MaterialPageRoute(
+                              fullscreenDialog: true,
+                              builder: (_) => Chambreespace(
+                                identreprise: widget.identreprise,
+                              ),
+                            ));
                           },
                         ),
                         _buildSmartCard(
@@ -128,20 +120,12 @@ class _MenuGestionlogementState extends State<MenuGestionlogement> {
                           description: 'Créer un nouveau client',
                           color: const Color(0xFF388E3C),
                           onTap: () {
-                            showDialog(
-                              context: context,
-                              builder: (BuildContext context) {
-                                return Dialog(
-                                  child: SizedBox(
-                                    width: 650,
-                                    height: 500,
-                                    child: AjouterClient(
-                                      identreprise: widget.identreprise,
-                                    ),
-                                  ),
-                                );
-                              },
-                            );
+                            Navigator.of(context).push(MaterialPageRoute(
+                              fullscreenDialog: true,
+                              builder: (_) => AjouterClient(
+                                identreprise: widget.identreprise,
+                              ),
+                            ));
                           },
                         ),
                         _buildSmartCard(
@@ -152,20 +136,12 @@ class _MenuGestionlogementState extends State<MenuGestionlogement> {
                           description: 'Prets à réserver',
                           color: const Color(0xFFF57C00),
                           onTap: () {
-                            showDialog(
-                              context: context,
-                              builder: (BuildContext context) {
-                                return Dialog(
-                                  child: SizedBox(
-                                    width: 720,
-                                    height: 580,
-                                    child: Reservation(
-                                      identreprise: widget.identreprise,
-                                    ),
-                                  ),
-                                );
-                              },
-                            );
+                            Navigator.of(context).push(MaterialPageRoute(
+                              fullscreenDialog: true,
+                              builder: (_) => Reservation(
+                                identreprise: widget.identreprise,
+                              ),
+                            ));
                           },
                         ),
                         _buildSmartCard(
@@ -176,20 +152,12 @@ class _MenuGestionlogementState extends State<MenuGestionlogement> {
                           description: 'Facturation de reservation',
                           color: const Color(0xFF00796B),
                           onTap: () {
-                            showDialog(
-                              context: context,
-                              builder: (BuildContext context) {
-                                return Dialog(
-                                  child: SizedBox(
-                                    width: 720,
-                                    height: 580,
-                                    child: FacturationchambreEspace(
-                                      identreprise: widget.identreprise,
-                                    ),
-                                  ),
-                                );
-                              },
-                            );
+                            Navigator.of(context).push(MaterialPageRoute(
+                              fullscreenDialog: true,
+                              builder: (_) => FacturationchambreEspace(
+                                identreprise: widget.identreprise,
+                              ),
+                            ));
                           },
                         ),
                       ],

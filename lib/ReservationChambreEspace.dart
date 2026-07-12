@@ -1,6 +1,8 @@
 import 'dart:convert';
 
+import 'package:beni_newlook/api_config.dart';
 import 'package:beni_newlook/pages/facturationChambreEspace.dart';
+import 'package:beni_newlook/session_utilisateur.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_typeahead/flutter_typeahead.dart';
 import 'package:http/http.dart' as http;
@@ -118,11 +120,14 @@ class _ReservationState extends State<Reservation> {
   setState(() => _isLoading = true);
 
   
-    var url = Uri.parse("https://riphin-salemanager.com/beni_newlook_API/AddReservation.php");
+    var url = Uri.parse("$apiBaseUrl/AddReservation.php");
 
     var response = await http.post(
       url,
-      headers: {'Content-Type': 'application/json'},
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': SessionUtilisateur.token,
+      },
       body: json.encode({
         "date": DateTime.now().toLocal().toString().split(' ')[0],
         "espace": selectedChambreId,
@@ -231,7 +236,7 @@ class _ReservationState extends State<Reservation> {
   // Fetch the list of reservations to display in the table
   Future<List<dynamic>> displayReservations() async {
     try {
-      var url = Uri.parse("https://riphin-salemanager.com/beni_newlook_API/AfficheReservations.php");
+      var url = Uri.parse("$apiBaseUrl/AfficheReservations.php");
       var response = await http.post(
         url,
         headers: {'Content-Type': 'application/json'},
@@ -254,7 +259,7 @@ class _ReservationState extends State<Reservation> {
 // Fetch chambres et espaces from the API
   Future<void> fetchChambresEspaces() async {
     try {
-      var url = Uri.parse("https://riphin-salemanager.com/beni_newlook_API/DisplayChambreEspace.php");
+      var url = Uri.parse("$apiBaseUrl/DisplayChambreEspace.php");
       var response = await http.post(
         url, 
         headers: {'Content-Type': 'application/json'}, 
@@ -284,7 +289,7 @@ class _ReservationState extends State<Reservation> {
   required int entrepriseId,
   required String nameClient,
 }) async {
-  final url = Uri.parse("https://riphin-salemanager.com/beni_newlook_API/FetchClient.php");
+  final url = Uri.parse("$apiBaseUrl/FetchClient.php");
 
   final response = await http.post(
     url,
@@ -313,7 +318,7 @@ class _ReservationState extends State<Reservation> {
   
 //Actualiser les reservations chaque apres jour pour liberer les chambres et espaces automatiquement
 Future<Map<String, dynamic>> cloturerReservations() async {
-  const String url = "https://riphin-salemanager.com/beni_newlook_API/RefreshStatutChambreEspace.php";
+  const String url = "$apiBaseUrl/RefreshStatutChambreEspace.php";
 
   try {
     final response = await http.post(

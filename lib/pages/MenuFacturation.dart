@@ -1,4 +1,6 @@
 import 'package:beni_newlook/PageCommande.dart';
+import 'package:beni_newlook/pages/FactureGlobaleClient.dart';
+import 'package:beni_newlook/pages/FacturesVenteParDate.dart';
 import 'package:beni_newlook/pages/facturationAutreServices.dart';
 import 'package:beni_newlook/pages/facturationChambreEspace.dart';
 import 'package:beni_newlook/pages/factureslogement_date.dart';
@@ -95,18 +97,10 @@ class _MenufacturationState extends State<Menufacturation> {
                       description: 'Ventes restaurant et bar',
                       color: const Color(0xFF1976D2),
                       onTap: () {
-                        showDialog(
-                          context: context,
-                          builder: (context) => Dialog(
-                            child: SizedBox(
-                              width: 850,
-                              height: 650,
-                              child: CommandePage(
-                                idEntreprise: widget.idEntreprise,
-                              ),
-                            ),
-                          ),
-                        );
+                        Navigator.of(context).push(MaterialPageRoute(
+                          fullscreenDialog: true,
+                          builder: (_) => CommandePage(idEntreprise: widget.idEntreprise),
+                        ));
                       },
                     ),
                     _buildSmartCard(
@@ -117,20 +111,12 @@ class _MenufacturationState extends State<Menufacturation> {
                       description: 'Règlements des réservations',
                       color: const Color(0xFF388E3C),
                       onTap: () {
-                        showDialog(
-                          context: context,
-                          builder: (BuildContext context) {
-                            return Dialog(
-                              child: SizedBox(
-                                width: 850,
-                                height: 650,
-                                child: FacturationchambreEspace(
-                                  identreprise: widget.idEntreprise,
-                                ),
-                              ),
-                            );
-                          },
-                        );
+                        Navigator.of(context).push(MaterialPageRoute(
+                          fullscreenDialog: true,
+                          builder: (_) => FacturationchambreEspace(
+                            identreprise: widget.idEntreprise,
+                          ),
+                        ));
                       },
                     ),
                     _buildSmartCard(
@@ -141,20 +127,12 @@ class _MenufacturationState extends State<Menufacturation> {
                       description: 'Services auxiliaires',
                       color: const Color(0xFFF57C00),
                       onTap: () {
-                        showDialog(
-                          context: context,
-                          builder: (BuildContext context) {
-                            return Dialog(
-                              child: SizedBox(
-                                width: 680,
-                                height: 500,
-                                child: FactureAutreServices(
-                                  idEntreprise: widget.idEntreprise,
-                                ),
-                              ),
-                            );
-                          },
-                        );
+                        Navigator.of(context).push(MaterialPageRoute(
+                          fullscreenDialog: true,
+                          builder: (_) => FactureAutreServices(
+                            idEntreprise: widget.idEntreprise,
+                          ),
+                        ));
                       },
                     ),
                     _buildSmartCard(
@@ -165,19 +143,38 @@ class _MenufacturationState extends State<Menufacturation> {
                       description: 'Synthèse de facturation globale',
                       color: const Color(0xFF7B1FA2),
                       onTap: () {
-                        // Action for Global Billing
-                        showDialog(
-                          context: context,
-                          builder: (BuildContext context) {
-                            return Dialog(
-                              child: SizedBox(
-                                width: 800,
-                                height: 600,
-                                child: FacturesLogement_date(identreprise: widget.idEntreprise),
-                                ),
-                              );
-                          },
-                        );
+                        Navigator.of(context).push(MaterialPageRoute(
+                          fullscreenDialog: true,
+                          builder: (_) => FacturesLogement_date(identreprise: widget.idEntreprise),
+                        ));
+                      },
+                    ),
+                    _buildSmartCard(
+                      context,
+                      index: 4,
+                      icon: Icons.receipt_outlined,
+                      title: 'Factures vente',
+                      description: 'Historique & impression par date',
+                      color: const Color(0xFF00796B),
+                      onTap: () {
+                        Navigator.of(context).push(MaterialPageRoute(
+                          fullscreenDialog: true,
+                          builder: (_) => FacturesVenteParDate(idEntreprise: widget.idEntreprise),
+                        ));
+                      },
+                    ),
+                    _buildSmartCard(
+                      context,
+                      index: 5,
+                      icon: Icons.summarize_rounded,
+                      title: 'Facture Globale',
+                      description: 'Logement + Services + Restaurant',
+                      color: const Color(0xFF6A1B9A),
+                      onTap: () {
+                        Navigator.of(context).push(MaterialPageRoute(
+                          fullscreenDialog: true,
+                          builder: (_) => FactureGlobaleClientPage(idEntreprise: widget.idEntreprise),
+                        ));
                       },
                     ),
                   ],

@@ -2,7 +2,9 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:beni_newlook/api_config.dart';
 import 'package:beni_newlook/pages/login.dart';
+import 'package:beni_newlook/session_utilisateur.dart';
 class Utilisateurs extends StatefulWidget {
   final int identreprise;
   const Utilisateurs({super.key, required this.identreprise});
@@ -19,21 +21,64 @@ class _UtilisateursState extends State<Utilisateurs> {
   final _motdepassController=TextEditingController();
   final _telephoneController=TextEditingController();
 
+  static const List<String> _roles = ['Gerant', 'Comptable', 'Caissier', 'Serveur'];
+  String _selectedRole = 'Serveur';
+  int? _selectedSection;
+  List<Map<String, dynamic>> _sections = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchSections();
+  }
+
+  Future<void> _fetchSections() async {
+    final response = await http.post(
+      Uri.parse('$apiBaseUrl/AfficherSectionsPrincipales.php'),
+      headers: {'Content-Type': 'application/json'},
+      body: json.encode({'entreprise': widget.identreprise}),
+    );
+    if (response.statusCode == 200) {
+      final List data = json.decode(response.body);
+      setState(() => _sections = List<Map<String, dynamic>>.from(data));
+    }
+  }
 
   Future <void> addUtilisateur(
-     
+
 
   )async{
+    if (_selectedRole != 'Gerant' && _selectedSection == null) {
+      showDialog(
+        context: context,
+        builder: (BuildContext context) => AlertDialog(
+          icon: const Icon(Icons.error_outline, color: Colors.red, size: 48),
+          title: const Text('Erreur'),
+          content: const Text('Veuillez sélectionner une section pour ce rôle.'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('OK'),
+            ),
+          ],
+        ),
+      );
+      return;
+    }
     try{
-        var url=Uri.parse("https://riphin-salemanager.com/beni_newlook_API/AjouterUtilisateur.php");
+        var url=Uri.parse("$apiBaseUrl/AjouterUtilisateur.php");
         var response=await http.post(
         url,
-        headers:{'Content-Type':'application/json'},
+        headers:{
+          'Content-Type':'application/json',
+          'Authorization': SessionUtilisateur.token,
+        },
         body: json.encode({
           "nom":_nomUtilisateurController.text,
           "keypassword":_motdepassController.text,
           "phone":_telephoneController.text,
-          "entreprise": widget.identreprise,
+          "role": _selectedRole,
+          "idSection": _selectedRole == 'Gerant' ? null : _selectedSection,
         })
 
       );
@@ -209,7 +254,51 @@ class _UtilisateursState extends State<Utilisateurs> {
                                 },
                               ),
                               SizedBox(height: 16,),
-                    
+
+                              DropdownButtonFormField<String>(
+                                initialValue: _selectedRole,
+                                decoration: InputDecoration(
+                                  labelText: 'Rôle',
+                                  labelStyle: TextStyle(color: Color.fromARGB(255, 121, 169, 240)),
+                                  prefixIcon: Icon(Icons.badge_outlined, color: Color.fromARGB(255, 121, 169, 240)),
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                    borderSide: BorderSide(color: Color.fromARGB(255, 121, 169, 240)),
+                                  ),
+                                ),
+                                items: _roles
+                                    .map((r) => DropdownMenuItem(value: r, child: Text(r)))
+                                    .toList(),
+                                onChanged: (v) => setState(() {
+                                  _selectedRole = v ?? 'Serveur';
+                                  if (_selectedRole == 'Gerant') _selectedSection = null;
+                                }),
+                              ),
+                              SizedBox(height: 16,),
+
+                              if (_selectedRole != 'Gerant')
+                                DropdownButtonFormField<int>(
+                                  initialValue: _selectedSection,
+                                  decoration: InputDecoration(
+                                    labelText: 'Section affectée',
+                                    labelStyle: TextStyle(color: Color.fromARGB(255, 121, 169, 240)),
+                                    prefixIcon: Icon(Icons.storefront_outlined, color: Color.fromARGB(255, 121, 169, 240)),
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(8),
+                                      borderSide: BorderSide(color: Color.fromARGB(255, 121, 169, 240)),
+                                    ),
+                                  ),
+                                  items: _sections
+                                      .map((s) => DropdownMenuItem<int>(
+                                            value: s['idSection'],
+                                            child: Text(s['descptionSection']),
+                                          ))
+                                      .toList(),
+                                  onChanged: (v) => setState(() => _selectedSection = v),
+                                  validator: (v) => v == null ? 'Section requise pour ce rôle' : null,
+                                ),
+                              if (_selectedRole != 'Gerant') SizedBox(height: 16,),
+
                               TextFormField(
                                 controller: _motdepassController,
                                 obscureText: _obscurepassWord,
